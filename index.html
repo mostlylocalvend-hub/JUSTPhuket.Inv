@@ -5,15 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Phuket Launch Edition — Stays & Experiences (≥4.4)</title>
 <style>
-  :root{
-    --bg:#0d0221; --card:#1a0933; --accent:#7a3cff; --muted:#b9a6ff; --text:#f4f1ff;
-    --ok:#22c55e; --chip:#2a1152;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#0b011d,#11022a 40%,#0d0221);color:var(--text)}
-  header{padding:28px 20px 8px;max-width:980px;margin:0 auto}
-  h1{margin:0 0 6px;font-size:28px;letter-spacing:.3px}
-  p.lede{margin:4px 0 18px;color:var(--muted)}
+  :root{--bg:#0d0221;--card:#1a0933;--accent:#7a3cff;--muted:#b9a6ff;--text:#f4f1ff;--ok:#22c55e;--chip:#2a1152}
+  *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#0b011d,#11022a 40%,#0d0221);color:var(--text)}
+  header{padding:28px 20px 8px;max-width:980px;margin:0 auto} h1{margin:0 0 6px;font-size:28px;letter-spacing:.3px}
+  .lede{margin:4px 0 18px;color:var(--muted)}
   .controls{display:grid;grid-template-columns:1fr 200px 150px;gap:10px}
   input,select{background:#13062a;border:1px solid #2c1a55;color:var(--text);padding:12px;border-radius:12px;outline:none}
   main{max-width:980px;margin:18px auto 60px;padding:0 20px}
@@ -31,7 +26,7 @@
 <body>
 <header>
   <h1>Phuket Launch Edition</h1>
-  <p class="lede">Hand-picked <strong>Stays</strong> & <strong>Experiences</strong> in Phuket (min rating&nbsp;≥&nbsp;4.4). Local, high-signal winners you can ship today.</p>
+  <p class="lede">Hand-picked <strong>Stays</strong> & <strong>Experiences</strong> in Phuket (min rating&nbsp;≥&nbsp;4.4).</p>
   <div class="controls">
     <input id="q" placeholder="Search name or notes…" />
     <select id="cat">
@@ -45,80 +40,48 @@
     </select>
   </div>
 </header>
-
 <main>
   <div id="grid" class="grid"></div>
-  <p class="footer">Sources: Booking.com, TripAdvisor, GetYourGuide (see each item link).</p>
+  <p class="footer">Sources: Booking.com, TripAdvisor, GetYourGuide.</p>
 </main>
-
 <script>
-const DATA = [
-  // --- STAYS ---
-  {name:"Keemala (Kamala)", category:"Stay", rating:4.7, blurb:"Rainforest pool-villa icon; wellness focus; secluded jungle vibes.",
-   url:"https://www.hilton.com/en/hotels/hktkrlx-keemala/"},
-  {name:"The Shore at Katathani (Kata Noi)", category:"Stay", rating:4.65, blurb:"Adult-only pool-villa resort overlooking Kata Noi Beach.",
-   url:"https://www.booking.com/hotel/th/the-shore-at-katathani.html"},
-  {name:"The Slate (Nai Yang)", category:"Stay", rating:4.6, blurb:"Design-forward resort by Nai Yang Beach; bold, art-driven aesthetics.",
-   url:"https://www.booking.com/hotel/th/the-slate.html"},
-  {name:"The Nai Harn (Nai Harn)", category:"Stay", rating:4.6, blurb:"Leading Hotels member; huge ocean-view rooms over pristine Naiharn Bay.",
-   url:"https://www.booking.com/hotel/th/the-nai-harn.html"},
-  {name:"Renaissance Phuket (Mai Khao)", category:"Stay", rating:4.6, blurb:"Beachfront Marriott; Quan Spa; quiet north-island location.",
-   url:"https://www.booking.com/hotel/th/renaissance-phuket-resort-spa.html"},
-  {name:"COMO Point Yamu (Cape Yamu)", category:"Stay", rating:4.5, blurb:"Modern, Paola Navone interiors; epic bay views; COMO wellness.",
-   url:"https://www.booking.com/reviews/th/hotel/point-yamu-by-como.html"},
+const DATA=[{name:"Keemala (Kamala)",category:"Stay",rating:4.7,blurb:"Rainforest pool-villa icon; wellness focus; secluded jungle vibes.",url:"https://www.hilton.com/en/hotels/hktkrlx-keemala/"},
+{name:"The Shore at Katathani (Kata Noi)",category:"Stay",rating:4.65,blurb:"Adult-only pool-villa resort overlooking Kata Noi Beach.",url:"https://www.booking.com/hotel/th/the-shore-at-katathani.html"},
+{name:"The Slate (Nai Yang)",category:"Stay",rating:4.6,blurb:"Design-forward resort by Nai Yang Beach; bold, art-driven aesthetics.",url:"https://www.booking.com/hotel/th/the-slate.html"},
+{name:"The Nai Harn (Nai Harn)",category:"Stay",rating:4.6,blurb:"Leading Hotels member; huge ocean-view rooms.",url:"https://www.booking.com/hotel/th/the-nai-harn.html"},
+{name:"Renaissance Phuket (Mai Khao)",category:"Stay",rating:4.6,blurb:"Beachfront Marriott; Quan Spa; quiet north-side.",url:"https://www.booking.com/hotel/th/renaissance-phuket-resort-spa.html"},
+{name:"COMO Point Yamu (Cape Yamu)",category:"Stay",rating:4.5,blurb:"Modern interiors; epic bay views; COMO wellness.",url:"https://www.booking.com/reviews/th/hotel/point-yamu-by-como.html"},
+{name:"Elephant Jungle Sanctuary (Half-Day + Meal)",category:"Experience",rating:4.9,blurb:"Ethical elephant visit with transfers & buffet.",url:"https://www.getyourguide.com/phuket-l32123/phuket-elephant-jungle-sanctuary-half-day-visit-t567839/"},
+{name:"Phuket Elephant Care (Half-Day)",category:"Experience",rating:4.8,blurb:"Hands-on ethical care; small-group feel.",url:"https://www.getyourguide.com/phuket-l32123/phuket-half-day-elephant-explorer-at-phuket-elephant-care-t509670/"},
+{name:"Wooddy Kitchen Cooking Class (Market + Garden)",category:"Experience",rating:4.9,blurb:"Market shop + garden tour + Thai classics.",url:"https://www.getyourguide.com/phuket-city-l187/wooddy-kitchen-thai-cooking-class-fresh-marketgargen-tour-t448151/"},
+{name:"Thai Cooking Class (4 dishes + Market)",category:"Experience",rating:5.0,blurb:"Compact class; chef-led; top marks.",url:"https://www.getyourguide.com/phuket-city-l187/thai-fozes-osztaly-phuket-tony-altal-t464580/"},
+{name:"Old Town ‘Food | Art | Town’ Tour",category:"Experience",rating:4.7,blurb:"Street snacks, art, and local culture.",url:"https://www.getyourguide.com/phuket-l32123/phuket-old-town-food-art-town-travstore-og-fat-tour-t411855/"},
+{name:"Secret Walking Food Tour Phuket",category:"Experience",rating:4.8,blurb:"Guided bites through hidden local spots.",url:"https://www.getyourguide.com/phuket-old-town-l105003/street-food-tc248/"},
+{name:"James Bond Island Day Trip",category:"Experience",rating:4.6,blurb:"Speedboat + canoe among limestone karsts.",url:"https://www.getyourguide.com/phuket-l32123/phuket-james-bond-island-day-trip-by-speedboat-and-canoe-t141483/"},
+{name:"Phi Phi Sunset + Bioluminescence",category:"Experience",rating:4.5,blurb:"Golden-hour swim + plankton glow.",url:"https://www.getyourguide.com/phi-phi-islands-l9477/speed-jet-boat-tours-tc53/"}];
 
-  // --- EXPERIENCES ---
-  {name:"Elephant Jungle Sanctuary (Half-Day + Meal)", category:"Experience", rating:4.9, blurb:"Ethical elephant visit with transfers & buffet.",
-   url:"https://www.getyourguide.com/phuket-l32123/phuket-elephant-jungle-sanctuary-half-day-visit-t567839/"},
-  {name:"Phuket Elephant Care (Half-Day)", category:"Experience", rating:4.8, blurb:"Hands-on ethical care; small-group feel.",
-   url:"https://www.getyourguide.com/phuket-l32123/phuket-half-day-elephant-explorer-at-phuket-elephant-care-t509670/"},
-  {name:"Wooddy Kitchen Cooking Class (Market + Garden)", category:"Experience", rating:4.9, blurb:"Market shop + garden tour + Thai classics.",
-   url:"https://www.getyourguide.com/phuket-city-l187/wooddy-kitchen-thai-cooking-class-fresh-marketgargen-tour-t448151/"},
-  {name:"Thai Cooking Class (4 dishes + Market)", category:"Experience", rating:5.0, blurb:"Compact class; chef-led; top marks.",
-   url:"https://www.getyourguide.com/phuket-city-l187/thai-fozes-osztaly-phuket-tony-altal-t464580/"},
-  {name:"Old Town ‘Food | Art | Town’ Tour", category:"Experience", rating:4.7, blurb:"Street snacks, art, and local culture in Phuket Old Town.",
-   url:"https://www.getyourguide.com/phuket-l32123/phuket-old-town-food-art-town-travstore-og-fat-tour-t411855/"},
-  {name:"Secret Walking Food Tour Phuket", category:"Experience", rating:4.8, blurb:"Guided bites through hidden local spots.",
-   url:"https://www.getyourguide.com/phuket-old-town-l105003/street-food-tc248/"},
-  {name:"James Bond Island Day Trip (Speedboat + Canoe)", category:"Experience", rating:4.6, blurb:"Iconic limestone karsts, canoe caves, island hopping.",
-   url:"https://www.getyourguide.com/phuket-l32123/phuket-james-bond-island-day-trip-by-speedboat-and-canoe-t141483/"},
-  {name:"Phi Phi & 4 Islands Sunset + Bioluminescence", category:"Experience", rating:4.5, blurb:"Golden-hour swim + plankton glow after dark.",
-   url:"https://www.getyourguide.com/phi-phi-islands-l9477/speed-jet-boat-tours-tc53/"}
-];
-
-const $q = document.getElementById('q');
-const $cat = document.getElementById('cat');
-const $sort = document.getElementById('sort');
-const $grid = document.getElementById('grid');
+const $q=document.getElementById('q'),$cat=document.getElementById('cat'),$sort=document.getElementById('sort'),$grid=document.getElementById('grid');
 
 function render(){
-  const q = ($q.value||'').toLowerCase();
-  const cat = $cat.value;
-  let items = DATA.filter(d=>{
-    const hit = d.name.toLowerCase().includes(q) || (d.blurb||'').toLowerCase().includes(q);
-    const catOk = !cat || d.category===cat;
-    return hit && catOk;
+  const q=($q.value||'').toLowerCase(), cat=$cat.value;
+  let items=DATA.filter(d=>{
+    const hit=d.name.toLowerCase().includes(q)|| (d.blurb||'').toLowerCase().includes(q);
+    const catOk=!cat||d.category===cat; return hit&&catOk;
   });
-  if($sort.value==='name'){ items.sort((a,b)=>a.name.localeCompare(b.name)); }
-  else { items.sort((a,b)=>b.rating - a.rating || a.name.localeCompare(b.name)); }
-  $grid.innerHTML = items.map(d=>`
-    <div class="card">
-      <div class="title">${d.name}</div>
-      <div class="meta">
-        <span class="chip">${d.category}</span>
-        <span class="chip rating">★ ${d.rating.toFixed(1)}</span>
-        <span class="chip">Phuket</span>
-      </div>
-      <div class="blurb">${d.blurb||''}</div>
-      <a class="link" href="${d.url}" target="_blank" rel="noopener">View source/details</a>
+  if($sort.value==='name'){items.sort((a,b)=>a.name.localeCompare(b.name));}
+  else{items.sort((a,b)=>b.rating-a.rating||a.name.localeCompare(b.name));}
+  $grid.innerHTML=items.map(d=>`<div class="card">
+    <div class="title">${d.name}</div>
+    <div class="meta">
+      <span class="chip">${d.category}</span>
+      <span class="chip rating">★ ${d.rating.toFixed(1)}</span>
+      <span class="chip">Phuket</span>
     </div>
-  `).join('');
+    <div class="blurb">${d.blurb||''}</div>
+    <a class="link" href="${d.url}" target="_blank" rel="noopener">View source/details</a>
+  </div>`).join('');
 }
-$q.addEventListener('input', render);
-$cat.addEventListener('change', render);
-$sort.addEventListener('change', render);
-render();
+$q.addEventListener('input',render); $cat.addEventListener('change',render); $sort.addEventListener('change',render); render();
 </script>
 </body>
 </html>
-
