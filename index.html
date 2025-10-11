@@ -3,85 +3,335 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Phuket Launch Edition — Stays & Experiences (≥4.4)</title>
+<title>Phuket Inventory Flowchart — Plan • Acquire • Execute</title>
 <style>
-  :root{--bg:#0d0221;--card:#1a0933;--accent:#7a3cff;--muted:#b9a6ff;--text:#f4f1ff;--ok:#22c55e;--chip:#2a1152}
-  *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#0b011d,#11022a 40%,#0d0221);color:var(--text)}
-  header{padding:28px 20px 8px;max-width:980px;margin:0 auto} h1{margin:0 0 6px;font-size:28px;letter-spacing:.3px}
-  .lede{margin:4px 0 18px;color:var(--muted)}
-  .controls{display:grid;grid-template-columns:1fr 200px 150px;gap:10px}
-  input,select{background:#13062a;border:1px solid #2c1a55;color:var(--text);padding:12px;border-radius:12px;outline:none}
-  main{max-width:980px;margin:18px auto 60px;padding:0 20px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
-  .card{background:var(--card);border:1px solid #2e1b5c;border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-  .title{font-weight:700;margin:0 0 8px}
-  .meta{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 10px}
-  .chip{background:var(--chip);border:1px solid #3a1f72;color:var(--muted);padding:4px 10px;border-radius:999px;font-size:12px}
-  .rating{font-weight:600;color:var(--ok)}
-  .blurb{color:#e8e3ffcc;margin:8px 0 12px;min-height:42px}
-  .link{display:inline-block;text-decoration:none;color:white;background:var(--accent);padding:10px 12px;border-radius:10px;border:1px solid #6e35e6}
-  .footer{opacity:.8;font-size:12px;margin-top:10px}
+  :root{
+    --bg:#0d0221; --panel:#160936; --lane:#1f0f47; --lane2:#22104f; --lane3:#251257;
+    --card:#2b1766; --accent:#7a3cff; --accent-2:#9b6bff; --muted:#c9bbff; --text:#f4f1ff;
+    --danger:#ef4444; --ok:#22c55e; --line:#3a2175;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:
+       radial-gradient(1200px 700px at 20% -10%, #17073a 0%, #0d0221 60%),
+       linear-gradient(180deg,#0b011d,#11022a 40%,#0d0221); color:var(--text)}
+  header{max-width:1200px;margin:0 auto;padding:22px 20px}
+  h1{margin:0;font-size:24px}
+  .lede{margin:6px 0 14px;color:var(--muted);font-size:14px}
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .btn{background:var(--accent);border:1px solid #6e35e6;color:#fff;padding:10px 12px;border-radius:12px;cursor:pointer}
+  .btn.secondary{background:#20104a;border-color:#3a2175}
+  .btn.danger{background:#3b0f19;border-color:#7a1c2e}
+  .btn:active{transform:translateY(1px)}
+  .wrap{max-width:1200px;margin:8px auto 40px;padding:0 20px}
+  .lanes{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media (max-width:1000px){ .lanes{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:640px){ .lanes{grid-template-columns:1fr} }
+  .lane{background:var(--lane); border:1px solid var(--line); border-radius:16px; overflow:hidden;
+        display:flex; flex-direction:column; min-height:280px}
+  .lane:nth-child(2n){background:var(--lane2)}
+  .lane:nth-child(3n){background:var(--lane3)}
+  .lane-header{display:flex;align-items:center;justify-content:space-between;
+               gap:8px;padding:12px 12px;border-bottom:1px dashed var(--line)}
+  .lane-title[contenteditable="true"]{outline:none;border:none;background:transparent;font-weight:700}
+  .lane-actions{display:flex;gap:6px}
+  .lane-actions .mini{font-size:12px;padding:6px 8px;border-radius:8px;background:#2a165c;border:1px solid #3a2175;color:#ddd;cursor:pointer}
+  .drop{flex:1; padding:12px; display:grid; gap:10px; align-content:flex-start; grid-auto-rows:minmax(64px,auto)}
+  .drop.drop-target{outline:2px dashed var(--accent); outline-offset:-6px}
+  .card{background:var(--card); border:1px solid #3c2380; border-radius:14px; padding:10px 12px; cursor:grab; position:relative}
+  .card:active{cursor:grabbing}
+  .card[contenteditable="true"]{outline:none}
+  .card .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .chip{font-size:11px;color:#e9e2ff;background:#361a78;border:1px solid #4a2a9a;border-radius:999px;padding:3px 8px}
+  .delete{position:absolute; top:6px; right:8px; background:transparent; border:0; color:#fff; opacity:.7; cursor:pointer; font-size:16px}
+  .delete:hover{opacity:1}
+  .ghost{opacity:.35; transform:scale(0.98)}
+  footer{max-width:1200px;margin:0 auto 60px;padding:0 20px;color:#d7cdfd7a;font-size:12px}
+  input[type="file"]{display:none}
+  .hint{color:#b8a9ff;font-size:12px;margin-top:6px}
 </style>
 </head>
 <body>
 <header>
-  <h1>Phuket Launch Edition</h1>
-  <p class="lede">Hand-picked <strong>Stays</strong> & <strong>Experiences</strong> in Phuket (min rating&nbsp;≥&nbsp;4.4).</p>
-  <div class="controls">
-    <input id="q" placeholder="Search name or notes…" />
-    <select id="cat">
-      <option value="">All categories</option>
-      <option value="Stay">Stay</option>
-      <option value="Experience">Experience</option>
-    </select>
-    <select id="sort">
-      <option value="rating">Sort: Rating (desc)</option>
-      <option value="name">Sort: Name (A–Z)</option>
-    </select>
+  <h1>Phuket Inventory — Flowchart (Plan → Acquire → Execute)</h1>
+  <p class="lede">Drag to re-order. Edit any text in place. Use the toolbar to add blocks/lanes, export/import JSON, or reset. Focus: Phuket (≥4.4 rating).</p>
+  <div class="toolbar">
+    <button class="btn" id="addBlock">+ Add Block</button>
+    <button class="btn" id="addLane">+ Add Lane</button>
+    <button class="btn secondary" id="exportBtn">Export JSON</button>
+    <label class="btn secondary" for="importFile">Import JSON</label>
+    <input id="importFile" type="file" accept="application/json" />
+    <button class="btn danger" id="resetBtn">Reset</button>
   </div>
+  <div class="hint">Tip: double-click lane names or blocks to edit. Press Enter to add a new line, or Esc to blur.</div>
 </header>
-<main>
-  <div id="grid" class="grid"></div>
-  <p class="footer">Sources: Booking.com, TripAdvisor, GetYourGuide.</p>
-</main>
+
+<div class="wrap">
+  <div id="lanes" class="lanes"></div>
+</div>
+
+<footer>
+  <p>Built for acquisition planning of Phuket inventory (stays & experiences). Persisted in your browser (localStorage).</p>
+</footer>
+
 <script>
-const DATA=[{name:"Keemala (Kamala)",category:"Stay",rating:4.7,blurb:"Rainforest pool-villa icon; wellness focus; secluded jungle vibes.",url:"https://www.hilton.com/en/hotels/hktkrlx-keemala/"},
-{name:"The Shore at Katathani (Kata Noi)",category:"Stay",rating:4.65,blurb:"Adult-only pool-villa resort overlooking Kata Noi Beach.",url:"https://www.booking.com/hotel/th/the-shore-at-katathani.html"},
-{name:"The Slate (Nai Yang)",category:"Stay",rating:4.6,blurb:"Design-forward resort by Nai Yang Beach; bold, art-driven aesthetics.",url:"https://www.booking.com/hotel/th/the-slate.html"},
-{name:"The Nai Harn (Nai Harn)",category:"Stay",rating:4.6,blurb:"Leading Hotels member; huge ocean-view rooms.",url:"https://www.booking.com/hotel/th/the-nai-harn.html"},
-{name:"Renaissance Phuket (Mai Khao)",category:"Stay",rating:4.6,blurb:"Beachfront Marriott; Quan Spa; quiet north-side.",url:"https://www.booking.com/hotel/th/renaissance-phuket-resort-spa.html"},
-{name:"COMO Point Yamu (Cape Yamu)",category:"Stay",rating:4.5,blurb:"Modern interiors; epic bay views; COMO wellness.",url:"https://www.booking.com/reviews/th/hotel/point-yamu-by-como.html"},
-{name:"Elephant Jungle Sanctuary (Half-Day + Meal)",category:"Experience",rating:4.9,blurb:"Ethical elephant visit with transfers & buffet.",url:"https://www.getyourguide.com/phuket-l32123/phuket-elephant-jungle-sanctuary-half-day-visit-t567839/"},
-{name:"Phuket Elephant Care (Half-Day)",category:"Experience",rating:4.8,blurb:"Hands-on ethical care; small-group feel.",url:"https://www.getyourguide.com/phuket-l32123/phuket-half-day-elephant-explorer-at-phuket-elephant-care-t509670/"},
-{name:"Wooddy Kitchen Cooking Class (Market + Garden)",category:"Experience",rating:4.9,blurb:"Market shop + garden tour + Thai classics.",url:"https://www.getyourguide.com/phuket-city-l187/wooddy-kitchen-thai-cooking-class-fresh-marketgargen-tour-t448151/"},
-{name:"Thai Cooking Class (4 dishes + Market)",category:"Experience",rating:5.0,blurb:"Compact class; chef-led; top marks.",url:"https://www.getyourguide.com/phuket-city-l187/thai-fozes-osztaly-phuket-tony-altal-t464580/"},
-{name:"Old Town ‘Food | Art | Town’ Tour",category:"Experience",rating:4.7,blurb:"Street snacks, art, and local culture.",url:"https://www.getyourguide.com/phuket-l32123/phuket-old-town-food-art-town-travstore-og-fat-tour-t411855/"},
-{name:"Secret Walking Food Tour Phuket",category:"Experience",rating:4.8,blurb:"Guided bites through hidden local spots.",url:"https://www.getyourguide.com/phuket-old-town-l105003/street-food-tc248/"},
-{name:"James Bond Island Day Trip",category:"Experience",rating:4.6,blurb:"Speedboat + canoe among limestone karsts.",url:"https://www.getyourguide.com/phuket-l32123/phuket-james-bond-island-day-trip-by-speedboat-and-canoe-t141483/"},
-{name:"Phi Phi Sunset + Bioluminescence",category:"Experience",rating:4.5,blurb:"Golden-hour swim + plankton glow.",url:"https://www.getyourguide.com/phi-phi-islands-l9477/speed-jet-boat-tours-tc53/"}];
+/* ------------------ Data Model ------------------ */
+const STORAGE_KEY = "phuket-flow-v1";
+let state = load() || seed();
 
-const $q=document.getElementById('q'),$cat=document.getElementById('cat'),$sort=document.getElementById('sort'),$grid=document.getElementById('grid');
+/* ------------------ DOM Helpers ------------------ */
+const lanesEl = document.getElementById("lanes");
+const importFile = document.getElementById("importFile");
 
-function render(){
-  const q=($q.value||'').toLowerCase(), cat=$cat.value;
-  let items=DATA.filter(d=>{
-    const hit=d.name.toLowerCase().includes(q)|| (d.blurb||'').toLowerCase().includes(q);
-    const catOk=!cat||d.category===cat; return hit&&catOk;
+function el(tag, attrs={}, ...children){
+  const node = document.createElement(tag);
+  Object.entries(attrs).forEach(([k,v])=>{
+    if(k==='class') node.className = v;
+    else if(k==='html') node.innerHTML = v;
+    else if(k==='text') node.textContent = v;
+    else node.setAttribute(k,v);
   });
-  if($sort.value==='name'){items.sort((a,b)=>a.name.localeCompare(b.name));}
-  else{items.sort((a,b)=>b.rating-a.rating||a.name.localeCompare(b.name));}
-  $grid.innerHTML=items.map(d=>`<div class="card">
-    <div class="title">${d.name}</div>
-    <div class="meta">
-      <span class="chip">${d.category}</span>
-      <span class="chip rating">★ ${d.rating.toFixed(1)}</span>
-      <span class="chip">Phuket</span>
-    </div>
-    <div class="blurb">${d.blurb||''}</div>
-    <a class="link" href="${d.url}" target="_blank" rel="noopener">View source/details</a>
-  </div>`).join('');
+  for(const c of children){ if(c) node.appendChild(c); }
+  return node;
 }
-$q.addEventListener('input',render); $cat.addEventListener('change',render); $sort.addEventListener('change',render); render();
+
+/* ------------------ Render ------------------ */
+function render(){
+  lanesEl.innerHTML = "";
+  state.lanes.forEach((lane, laneIdx)=>{
+    const laneEl = el("div",{class:"lane", "data-lane": lane.id});
+    const header = el("div",{class:"lane-header"});
+    const title = el("div",{class:"lane-title", contenteditable:"true", spellcheck:"false"});
+    title.textContent = lane.title;
+    title.addEventListener("input", ()=>{ lane.title = title.textContent.trim(); save(); });
+
+    const actions = el("div",{class:"lane-actions"});
+    const addBtn = el("button",{class:"mini", title:"Add block to this lane"}); addBtn.textContent = "+ Block";
+    addBtn.onclick = ()=>{ addBlock(lane.id, {text:"New step…"}); };
+    const delBtn = el("button",{class:"mini", title:"Delete lane"}); delBtn.textContent = "✕ Lane";
+    delBtn.onclick = ()=>{ if(confirm("Delete this lane and all its blocks?")){ state.lanes.splice(laneIdx,1); save(); render(); } };
+    actions.append(addBtn, delBtn);
+
+    header.append(title, actions);
+    const drop = el("div",{class:"drop", "data-lane": lane.id});
+    enableDropZone(drop);
+
+    lane.blocks.forEach(block=>{
+      drop.appendChild(renderCard(block, lane.id));
+    });
+
+    laneEl.append(header, drop);
+    lanesEl.appendChild(laneEl);
+  });
+}
+
+/* ------------------ Cards ------------------ */
+function renderCard(block, laneId){
+  const card = el("div",{class:"card", draggable:"true", "data-id":block.id});
+  const del = el("button",{class:"delete", title:"Delete block"}); del.textContent = "✕";
+  del.onclick = (e)=>{ e.stopPropagation(); removeBlock(laneId, block.id); };
+
+  const text = el("div",{contenteditable:"true", spellcheck:"false"});
+  text.innerHTML = sanitize(block.text || "");
+  text.addEventListener("input", ()=>{
+    const b = findBlock(block.id);
+    if(b){ b.text = text.innerHTML; save(); }
+  });
+
+  const meta = el("div",{class:"meta"});
+  const chip1 = el("span",{class:"chip"}); chip1.textContent = block.tag || "Step";
+  chip1.contentEditable = "true"; chip1.spellcheck = false;
+  chip1.addEventListener("input",()=>{
+    const b = findBlock(block.id);
+    if(b){ b.tag = chip1.textContent.trim() || "Step"; save(); }
+  });
+  const chip2 = el("span",{class:"chip"}); chip2.textContent = block.owner || "Unassigned";
+  chip2.contentEditable = "true"; chip2.spellcheck = false;
+  chip2.addEventListener("input",()=>{
+    const b = findBlock(block.id);
+    if(b){ b.owner = chip2.textContent.trim() || "Unassigned"; save(); }
+  });
+
+  meta.append(chip1, chip2);
+  card.append(del, text, meta);
+
+  enableDrag(card);
+  return card;
+}
+
+/* ------------------ Drag & Drop ------------------ */
+let dragData = null;
+
+function enableDrag(card){
+  card.addEventListener("dragstart", (e)=>{
+    card.classList.add("ghost");
+    dragData = { id: card.getAttribute("data-id") };
+    e.dataTransfer.setData("text/plain", dragData.id);
+    e.dataTransfer.effectAllowed = "move";
+  });
+  card.addEventListener("dragend", ()=>{
+    card.classList.remove("ghost");
+    dragData = null;
+    document.querySelectorAll(".drop-target").forEach(d=>d.classList.remove("drop-target"));
+  });
+}
+
+function enableDropZone(zone){
+  zone.addEventListener("dragover",(e)=>{
+    e.preventDefault();
+    zone.classList.add("drop-target");
+    const after = getDragAfterElement(zone, e.clientY);
+    e.dataTransfer.dropEffect = "move";
+  });
+  zone.addEventListener("dragleave",()=> zone.classList.remove("drop-target"));
+  zone.addEventListener("drop",(e)=>{
+    e.preventDefault();
+    zone.classList.remove("drop-target");
+    const draggedId = e.dataTransfer.getData("text/plain");
+    const targetLaneId = zone.getAttribute("data-lane");
+    moveBlockToLane(draggedId, targetLaneId, computeIndex(zone, e.clientY));
+  });
+}
+
+function getDragAfterElement(container, y){
+  const elems = [...container.querySelectorAll(".card:not(.ghost)")];
+  return elems.reduce((closest, child)=>{
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    return (offset < 0 && offset > closest.offset) ? {offset, element: child} : closest;
+  }, {offset: Number.NEGATIVE_INFINITY}).element;
+}
+
+function computeIndex(container, y){
+  const cards = [...container.querySelectorAll(".card")];
+  if(cards.length===0) return 0;
+  let index = cards.length;
+  for(let i=0;i<cards.length;i++){
+    const box = cards[i].getBoundingClientRect();
+    if(y < box.top + box.height/2){ index = i; break; }
+  }
+  return index;
+}
+
+/* ------------------ State Ops ------------------ */
+function addLane(title="New Lane"){
+  state.lanes.push({ id: uid(), title, blocks: [] });
+  save(); render();
+}
+function addBlock(laneId, block = {text:"New step…"}){
+  const lane = state.lanes.find(l=>l.id===laneId);
+  if(!lane) return;
+  lane.blocks.push({ id: uid(), text:block.text||"New step…", tag:block.tag||"Step", owner:block.owner||"Unassigned" });
+  save(); render();
+}
+function removeBlock(laneId, blockId){
+  const lane = state.lanes.find(l=>l.id===laneId);
+  if(!lane) return;
+  lane.blocks = lane.blocks.filter(b=>b.id!==blockId);
+  save(); render();
+}
+function moveBlockToLane(blockId, targetLaneId, insertIndex){
+  // remove from old
+  let blk=null, oldLane=null;
+  for(const l of state.lanes){
+    const idx = l.blocks.findIndex(b=>b.id===blockId);
+    if(idx>-1){ blk = l.blocks.splice(idx,1)[0]; oldLane=l; break; }
+  }
+  if(!blk) return;
+  const lane = state.lanes.find(l=>l.id===targetLaneId);
+  if(!lane) { oldLane.blocks.push(blk); return; }
+  if(insertIndex<0 || insertIndex>lane.blocks.length) insertIndex = lane.blocks.length;
+  lane.blocks.splice(insertIndex,0,blk);
+  save(); render();
+}
+function findBlock(id){
+  for(const l of state.lanes){ for(const b of l.blocks){ if(b.id===id) return b; } }
+  return null;
+}
+
+/* ------------------ Persistence ------------------ */
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+function load(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)||""); }catch(e){ return null; } }
+
+/* ------------------ Utilities ------------------ */
+function uid(){ return Math.random().toString(36).slice(2,9); }
+function sanitize(html){
+  // very light sanitizer for contenteditable (basic inline tags only)
+  const template = document.createElement('template');
+  template.innerHTML = html;
+  template.content.querySelectorAll('*').forEach(el=>{
+    const allowed = ['B','I','U','BR','STRONG','EM','SPAN','A'];
+    if(!allowed.includes(el.tagName)){
+      const text = document.createTextNode(el.textContent);
+      el.replaceWith(text);
+    } else if(el.tagName==='A'){
+      el.rel = "noopener";
+      el.target = "_blank";
+    }
+  });
+  return template.innerHTML;
+}
+
+/* ------------------ Seed ------------------ */
+function seed(){
+  return {
+    lanes: [
+      { id: uid(), title:"1) Sourcing (Research)", blocks:[
+        {id:uid(), text:"Define categories: <b>Stays</b>, <b>Experiences</b>", tag:"Scope", owner:"You"},
+        {id:uid(), text:"Set quality bar: <b>≥ 4.4/5</b> or <b>≥ 8.8/10</b>", tag:"Rule", owner:"You"},
+        {id:uid(), text:"Pull candidates from Booking, TripAdvisor, GetYourGuide", tag:"Source", owner:"You"},
+        {id:uid(), text:"Create shortlist (10–20) for Phuket", tag:"Output", owner:"You"},
+      ]},
+      { id: uid(), title:"2) Vetting (Signals & Ethics)", blocks:[
+        {id:uid(), text:"Check total reviews (prefer ≥100)", tag:"Signal", owner:"You"},
+        {id:uid(), text:"Scan recent negatives: safety, ethics, overcrowding", tag:"Risk", owner:"You"},
+        {id:uid(), text:"Confirm location & fit (Phuket-only)", tag:"Filter", owner:"You"},
+      ]},
+      { id: uid(), title:"3) Acquisition (Outreach)", blocks:[
+        {id:uid(), text:"Contact GM/owner; explain Launch Edition", tag:"Comms", owner:"You"},
+        {id:uid(), text:"Request assets: short bio, 2–3 photos, booking link", tag:"Assets", owner:"Partner"},
+        {id:uid(), text:"Negotiate perks/commission if applicable", tag:"Deal", owner:"You"},
+      ]},
+      { id: uid(), title:"4) Onboarding → Publish", blocks:[
+        {id:uid(), text:"Verify details (name, link, rating, blurb)", tag:"QA", owner:"You"},
+        {id:uid(), text:"Create listing card & schedule review", tag:"Build", owner:"You"},
+        {id:uid(), text:"Publish to Launch Edition", tag:"Ship", owner:"You"},
+      ]},
+    ]
+  };
+}
+
+/* ------------------ Toolbar ------------------ */
+document.getElementById("addLane").onclick = ()=> addLane("New Lane");
+document.getElementById("addBlock").onclick = ()=>{
+  if(!state.lanes.length) addLane("New Lane");
+  addBlock(state.lanes[0].id, {text:"New step…"});
+};
+document.getElementById("resetBtn").onclick = ()=>{
+  if(confirm("Reset to initial template? This clears current layout.")){
+    state = seed(); save(); render();
+  }
+};
+document.getElementById("exportBtn").onclick = ()=>{
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "phuket-flow.json"; a.click();
+  URL.revokeObjectURL(url);
+};
+importFile.addEventListener("change", (e)=>{
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{ try{
+      const data = JSON.parse(reader.result);
+      if(!data || !Array.isArray(data.lanes)) throw new Error("Invalid JSON");
+      state = data; save(); render();
+    }catch(err){ alert("Import failed: " + err.message); }
+  };
+  reader.readAsText(file);
+});
+
+/* ------------------ Init ------------------ */
+render();
 </script>
 </body>
 </html>
