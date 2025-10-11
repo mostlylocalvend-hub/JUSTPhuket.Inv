@@ -3,335 +3,519 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Phuket Inventory Flowchart — Plan • Acquire • Execute</title>
+<title>Phuket Inventory Bubble Map — Plan • Acquire • Execute</title>
 <style>
   :root{
-    --bg:#0d0221; --panel:#160936; --lane:#1f0f47; --lane2:#22104f; --lane3:#251257;
-    --card:#2b1766; --accent:#7a3cff; --accent-2:#9b6bff; --muted:#c9bbff; --text:#f4f1ff;
-    --danger:#ef4444; --ok:#22c55e; --line:#3a2175;
+    --bg:#0d0221; --grid:#261255; --bubble:#2b1766; --bubble-2:#361a78; --bubble-3:#401e8e;
+    --stroke:#6f4aff; --accent:#7a3cff; --muted:#c9bbff; --text:#f4f1ff; --panel:#160936;
+    --ok:#22c55e; --danger:#ef4444; --line:#5330cc; --handle:#9b6bff;
   }
   *{box-sizing:border-box}
+  html,body{height:100%}
   body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;background:
-       radial-gradient(1200px 700px at 20% -10%, #17073a 0%, #0d0221 60%),
-       linear-gradient(180deg,#0b011d,#11022a 40%,#0d0221); color:var(--text)}
-  header{max-width:1200px;margin:0 auto;padding:22px 20px}
-  h1{margin:0;font-size:24px}
-  .lede{margin:6px 0 14px;color:var(--muted);font-size:14px}
-  .toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-  .btn{background:var(--accent);border:1px solid #6e35e6;color:#fff;padding:10px 12px;border-radius:12px;cursor:pointer}
-  .btn.secondary{background:#20104a;border-color:#3a2175}
+    linear-gradient(180deg,#0b011d,#11022a 40%,#0d0221);color:var(--text);overflow:hidden}
+  header{height:64px;display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #2a165c;background:rgba(16,5,38,.7);backdrop-filter:blur(6px)}
+  h1{margin:0;font-size:18px}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap}
+  .btn{background:var(--accent);border:1px solid #6e35e6;color:#fff;padding:8px 12px;border-radius:12px;cursor:pointer;font-size:14px}
+  .btn.secondary{background:#241150;border-color:#3a2175}
   .btn.danger{background:#3b0f19;border-color:#7a1c2e}
   .btn:active{transform:translateY(1px)}
-  .wrap{max-width:1200px;margin:8px auto 40px;padding:0 20px}
-  .lanes{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-  @media (max-width:1000px){ .lanes{grid-template-columns:repeat(2,1fr)} }
-  @media (max-width:640px){ .lanes{grid-template-columns:1fr} }
-  .lane{background:var(--lane); border:1px solid var(--line); border-radius:16px; overflow:hidden;
-        display:flex; flex-direction:column; min-height:280px}
-  .lane:nth-child(2n){background:var(--lane2)}
-  .lane:nth-child(3n){background:var(--lane3)}
-  .lane-header{display:flex;align-items:center;justify-content:space-between;
-               gap:8px;padding:12px 12px;border-bottom:1px dashed var(--line)}
-  .lane-title[contenteditable="true"]{outline:none;border:none;background:transparent;font-weight:700}
-  .lane-actions{display:flex;gap:6px}
-  .lane-actions .mini{font-size:12px;padding:6px 8px;border-radius:8px;background:#2a165c;border:1px solid #3a2175;color:#ddd;cursor:pointer}
-  .drop{flex:1; padding:12px; display:grid; gap:10px; align-content:flex-start; grid-auto-rows:minmax(64px,auto)}
-  .drop.drop-target{outline:2px dashed var(--accent); outline-offset:-6px}
-  .card{background:var(--card); border:1px solid #3c2380; border-radius:14px; padding:10px 12px; cursor:grab; position:relative}
-  .card:active{cursor:grabbing}
-  .card[contenteditable="true"]{outline:none}
-  .card .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
-  .chip{font-size:11px;color:#e9e2ff;background:#361a78;border:1px solid #4a2a9a;border-radius:999px;padding:3px 8px}
-  .delete{position:absolute; top:6px; right:8px; background:transparent; border:0; color:#fff; opacity:.7; cursor:pointer; font-size:16px}
-  .delete:hover{opacity:1}
-  .ghost{opacity:.35; transform:scale(0.98)}
-  footer{max-width:1200px;margin:0 auto 60px;padding:0 20px;color:#d7cdfd7a;font-size:12px}
+  .hint{margin-left:auto;color:#b9a6ff;font-size:12px;opacity:.9}
+
+  .app{display:grid;grid-template-columns:1fr 320px;height:calc(100% - 64px)}
+  .canvas-wrap{position:relative;overflow:hidden;background:
+    linear-gradient(0deg, transparent 24%, rgba(255,255,255,.04) 25%, rgba(255,255,255,.04) 26%, transparent 27%, transparent 74%, rgba(255,255,255,.04) 75%, rgba(255,255,255,.04) 76%, transparent 77%),
+    linear-gradient(90deg, transparent 24%, rgba(255,255,255,.04) 25%, rgba(255,255,255,.04) 26%, transparent 27%, transparent 74%, rgba(255,255,255,.04) 75%, rgba(255,255,255,.04) 76%, transparent 77%);
+  background-size: 44px 44px; background-color:#0f0725}
+  #edges{position:absolute;inset:0;pointer-events:none}
+  #world{position:absolute;inset:0}
+
+  .bubble{
+    position:absolute; border-radius:999px; background:radial-gradient(120px 120px at 30% 30%, var(--bubble-2), var(--bubble));
+    border:2px solid var(--stroke); box-shadow:0 12px 30px rgba(0,0,0,.35);
+    padding:8px; cursor:grab; user-select:none; min-width:80px; min-height:80px;
+    display:flex; align-items:center; justify-content:center; text-align:center;
+  }
+  .bubble.level-2{background:radial-gradient(120px 120px at 30% 30%, var(--bubble-3), var(--bubble-2))}
+  .bubble.level-3{background:radial-gradient(120px 120px at 30% 30%, #4b25a8, var(--bubble-3))}
+  .bubble.level-4{background:radial-gradient(120px 120px at 30% 30%, #5a2fd1, #4b25a8)}
+  .bubble.level-5{background:radial-gradient(120px 120px at 30% 30%, #6b3cff, #5a2fd1)}
+  .bubble.selected{outline:3px solid #fff8; outline-offset:3px}
+  .bubble .title{font-weight:700;line-height:1.2}
+  .bubble .ring{position:absolute;inset:0;border-radius:999px;border:2px dashed #b9a6ff55;pointer-events:none}
+  .bubble .x{position:absolute;top:6px;right:8px;font-size:16px;opacity:.7;cursor:pointer}
+  .bubble .x:hover{opacity:1}
+  .dragging{cursor:grabbing}
+  .connect-handle{position:absolute;bottom:-8px;right:-8px;width:16px;height:16px;border-radius:999px;background:var(--handle);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+
+  aside{border-left:1px solid #2a165c;background:var(--panel);display:flex;flex-direction:column}
+  .side-head{padding:12px 14px;border-bottom:1px solid #2a165c}
+  .side-head h2{margin:0;font-size:16px}
+  .side-body{padding:10px 14px;overflow:auto}
+  .label{font-size:12px;color:#b9a6ff;margin-top:8px}
+  .input, .area{
+    width:100%;background:#1a0a3c;border:1px solid #3a2175;color:#fff;
+    border-radius:10px;padding:8px 10px;font-size:14px;outline:none
+  }
+  .area{min-height:64px}
+  .linklist{margin:8px 0;display:grid;gap:6px}
+  .linkitem{display:flex;gap:6px}
+  .linkitem input{flex:1}
+  .small{font-size:12px;color:#9d8cff;margin-top:8px}
+  .pill{display:inline-block;background:#2a165c;border:1px solid #3a2175;color:#ddd;padding:4px 8px;border-radius:999px;font-size:11px;margin-right:4px}
+
+  .footer{margin-top:auto;padding:10px 14px;font-size:12px;color:#d7cdfd7a;border-top:1px solid #2a165c}
   input[type="file"]{display:none}
-  .hint{color:#b8a9ff;font-size:12px;margin-top:6px}
 </style>
 </head>
 <body>
 <header>
-  <h1>Phuket Inventory — Flowchart (Plan → Acquire → Execute)</h1>
-  <p class="lede">Drag to re-order. Edit any text in place. Use the toolbar to add blocks/lanes, export/import JSON, or reset. Focus: Phuket (≥4.4 rating).</p>
+  <h1>Phuket Inventory — Bubble Map</h1>
   <div class="toolbar">
-    <button class="btn" id="addBlock">+ Add Block</button>
-    <button class="btn" id="addLane">+ Add Lane</button>
+    <button class="btn" id="addBubble">+ Bubble</button>
+    <button class="btn secondary" id="connectMode">Connect</button>
     <button class="btn secondary" id="exportBtn">Export JSON</button>
     <label class="btn secondary" for="importFile">Import JSON</label>
     <input id="importFile" type="file" accept="application/json" />
+    <button class="btn danger" id="deleteSel">Delete Selected</button>
     <button class="btn danger" id="resetBtn">Reset</button>
   </div>
-  <div class="hint">Tip: double-click lane names or blocks to edit. Press Enter to add a new line, or Esc to blur.</div>
+  <div class="hint">Drag to move or nest. Double-click titles to edit. Click a bubble for links. “Connect” to draw lines. </div>
 </header>
 
-<div class="wrap">
-  <div id="lanes" class="lanes"></div>
+<div class="app">
+  <div class="canvas-wrap">
+    <svg id="edges"></svg>
+    <div id="world"></div>
+  </div>
+  <aside>
+    <div class="side-head"><h2 id="sideTitle">No bubble selected</h2></div>
+    <div class="side-body">
+      <div class="label">Title</div>
+      <input class="input" id="titleInput" placeholder="Bubble title…" disabled />
+      <div class="label">Notes</div>
+      <textarea class="area" id="notesInput" placeholder="Short notes…" disabled></textarea>
+
+      <div class="label">Links (editable)</div>
+      <div class="small">Use the preset categories or add more. All links are live.</div>
+      <div class="linklist" id="links"></div>
+      <button class="btn secondary" id="addLink" disabled>+ Add link</button>
+
+      <div class="label">Tags</div>
+      <div id="tags"></div>
+    </div>
+    <div class="footer">
+      <span class="pill">Phuket</span>
+      <span class="pill">≥ 4.4 rating</span>
+      <span class="pill">5-level nesting</span>
+    </div>
+  </aside>
 </div>
 
-<footer>
-  <p>Built for acquisition planning of Phuket inventory (stays & experiences). Persisted in your browser (localStorage).</p>
-</footer>
-
 <script>
-/* ------------------ Data Model ------------------ */
-const STORAGE_KEY = "phuket-flow-v1";
+/* ================== Data Model ================== */
+const STORAGE_KEY = "phuket-bubbles-v1";
 let state = load() || seed();
 
-/* ------------------ DOM Helpers ------------------ */
-const lanesEl = document.getElementById("lanes");
-const importFile = document.getElementById("importFile");
+/* ================== Helpers ================== */
+const world = document.getElementById("world");
+const edges = document.getElementById("edges");
+const connectBtn = document.getElementById("connectMode");
+const deleteSelBtn = document.getElementById("deleteSel");
+const titleInput = document.getElementById("titleInput");
+const notesInput = document.getElementById("notesInput");
+const linksWrap = document.getElementById("links");
+const addLinkBtn = document.getElementById("addLink");
+const tagsWrap = document.getElementById("tags");
 
-function el(tag, attrs={}, ...children){
-  const node = document.createElement(tag);
-  Object.entries(attrs).forEach(([k,v])=>{
-    if(k==='class') node.className = v;
-    else if(k==='html') node.innerHTML = v;
-    else if(k==='text') node.textContent = v;
-    else node.setAttribute(k,v);
-  });
-  for(const c of children){ if(c) node.appendChild(c); }
-  return node;
-}
+let selectedId = null;
+let connectMode = false;
+let pendingConnectFrom = null;
 
-/* ------------------ Render ------------------ */
-function render(){
-  lanesEl.innerHTML = "";
-  state.lanes.forEach((lane, laneIdx)=>{
-    const laneEl = el("div",{class:"lane", "data-lane": lane.id});
-    const header = el("div",{class:"lane-header"});
-    const title = el("div",{class:"lane-title", contenteditable:"true", spellcheck:"false"});
-    title.textContent = lane.title;
-    title.addEventListener("input", ()=>{ lane.title = title.textContent.trim(); save(); });
-
-    const actions = el("div",{class:"lane-actions"});
-    const addBtn = el("button",{class:"mini", title:"Add block to this lane"}); addBtn.textContent = "+ Block";
-    addBtn.onclick = ()=>{ addBlock(lane.id, {text:"New step…"}); };
-    const delBtn = el("button",{class:"mini", title:"Delete lane"}); delBtn.textContent = "✕ Lane";
-    delBtn.onclick = ()=>{ if(confirm("Delete this lane and all its blocks?")){ state.lanes.splice(laneIdx,1); save(); render(); } };
-    actions.append(addBtn, delBtn);
-
-    header.append(title, actions);
-    const drop = el("div",{class:"drop", "data-lane": lane.id});
-    enableDropZone(drop);
-
-    lane.blocks.forEach(block=>{
-      drop.appendChild(renderCard(block, lane.id));
-    });
-
-    laneEl.append(header, drop);
-    lanesEl.appendChild(laneEl);
-  });
-}
-
-/* ------------------ Cards ------------------ */
-function renderCard(block, laneId){
-  const card = el("div",{class:"card", draggable:"true", "data-id":block.id});
-  const del = el("button",{class:"delete", title:"Delete block"}); del.textContent = "✕";
-  del.onclick = (e)=>{ e.stopPropagation(); removeBlock(laneId, block.id); };
-
-  const text = el("div",{contenteditable:"true", spellcheck:"false"});
-  text.innerHTML = sanitize(block.text || "");
-  text.addEventListener("input", ()=>{
-    const b = findBlock(block.id);
-    if(b){ b.text = text.innerHTML; save(); }
-  });
-
-  const meta = el("div",{class:"meta"});
-  const chip1 = el("span",{class:"chip"}); chip1.textContent = block.tag || "Step";
-  chip1.contentEditable = "true"; chip1.spellcheck = false;
-  chip1.addEventListener("input",()=>{
-    const b = findBlock(block.id);
-    if(b){ b.tag = chip1.textContent.trim() || "Step"; save(); }
-  });
-  const chip2 = el("span",{class:"chip"}); chip2.textContent = block.owner || "Unassigned";
-  chip2.contentEditable = "true"; chip2.spellcheck = false;
-  chip2.addEventListener("input",()=>{
-    const b = findBlock(block.id);
-    if(b){ b.owner = chip2.textContent.trim() || "Unassigned"; save(); }
-  });
-
-  meta.append(chip1, chip2);
-  card.append(del, text, meta);
-
-  enableDrag(card);
-  return card;
-}
-
-/* ------------------ Drag & Drop ------------------ */
-let dragData = null;
-
-function enableDrag(card){
-  card.addEventListener("dragstart", (e)=>{
-    card.classList.add("ghost");
-    dragData = { id: card.getAttribute("data-id") };
-    e.dataTransfer.setData("text/plain", dragData.id);
-    e.dataTransfer.effectAllowed = "move";
-  });
-  card.addEventListener("dragend", ()=>{
-    card.classList.remove("ghost");
-    dragData = null;
-    document.querySelectorAll(".drop-target").forEach(d=>d.classList.remove("drop-target"));
-  });
-}
-
-function enableDropZone(zone){
-  zone.addEventListener("dragover",(e)=>{
-    e.preventDefault();
-    zone.classList.add("drop-target");
-    const after = getDragAfterElement(zone, e.clientY);
-    e.dataTransfer.dropEffect = "move";
-  });
-  zone.addEventListener("dragleave",()=> zone.classList.remove("drop-target"));
-  zone.addEventListener("drop",(e)=>{
-    e.preventDefault();
-    zone.classList.remove("drop-target");
-    const draggedId = e.dataTransfer.getData("text/plain");
-    const targetLaneId = zone.getAttribute("data-lane");
-    moveBlockToLane(draggedId, targetLaneId, computeIndex(zone, e.clientY));
-  });
-}
-
-function getDragAfterElement(container, y){
-  const elems = [...container.querySelectorAll(".card:not(.ghost)")];
-  return elems.reduce((closest, child)=>{
-    const box = child.getBoundingClientRect();
-    const offset = y - box.top - box.height / 2;
-    return (offset < 0 && offset > closest.offset) ? {offset, element: child} : closest;
-  }, {offset: Number.NEGATIVE_INFINITY}).element;
-}
-
-function computeIndex(container, y){
-  const cards = [...container.querySelectorAll(".card")];
-  if(cards.length===0) return 0;
-  let index = cards.length;
-  for(let i=0;i<cards.length;i++){
-    const box = cards[i].getBoundingClientRect();
-    if(y < box.top + box.height/2){ index = i; break; }
-  }
-  return index;
-}
-
-/* ------------------ State Ops ------------------ */
-function addLane(title="New Lane"){
-  state.lanes.push({ id: uid(), title, blocks: [] });
-  save(); render();
-}
-function addBlock(laneId, block = {text:"New step…"}){
-  const lane = state.lanes.find(l=>l.id===laneId);
-  if(!lane) return;
-  lane.blocks.push({ id: uid(), text:block.text||"New step…", tag:block.tag||"Step", owner:block.owner||"Unassigned" });
-  save(); render();
-}
-function removeBlock(laneId, blockId){
-  const lane = state.lanes.find(l=>l.id===laneId);
-  if(!lane) return;
-  lane.blocks = lane.blocks.filter(b=>b.id!==blockId);
-  save(); render();
-}
-function moveBlockToLane(blockId, targetLaneId, insertIndex){
-  // remove from old
-  let blk=null, oldLane=null;
-  for(const l of state.lanes){
-    const idx = l.blocks.findIndex(b=>b.id===blockId);
-    if(idx>-1){ blk = l.blocks.splice(idx,1)[0]; oldLane=l; break; }
-  }
-  if(!blk) return;
-  const lane = state.lanes.find(l=>l.id===targetLaneId);
-  if(!lane) { oldLane.blocks.push(blk); return; }
-  if(insertIndex<0 || insertIndex>lane.blocks.length) insertIndex = lane.blocks.length;
-  lane.blocks.splice(insertIndex,0,blk);
-  save(); render();
-}
-function findBlock(id){
-  for(const l of state.lanes){ for(const b of l.blocks){ if(b.id===id) return b; } }
-  return null;
-}
-
-/* ------------------ Persistence ------------------ */
+function uid(){ return Math.random().toString(36).slice(2,9); }
 function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 function load(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)||""); }catch(e){ return null; } }
 
-/* ------------------ Utilities ------------------ */
-function uid(){ return Math.random().toString(36).slice(2,9); }
-function sanitize(html){
-  // very light sanitizer for contenteditable (basic inline tags only)
-  const template = document.createElement('template');
-  template.innerHTML = html;
-  template.content.querySelectorAll('*').forEach(el=>{
-    const allowed = ['B','I','U','BR','STRONG','EM','SPAN','A'];
-    if(!allowed.includes(el.tagName)){
-      const text = document.createTextNode(el.textContent);
-      el.replaceWith(text);
-    } else if(el.tagName==='A'){
-      el.rel = "noopener";
-      el.target = "_blank";
-    }
-  });
-  return template.innerHTML;
+function centerOf(node){
+  const p = absPos(node);
+  return { cx: p.x + node.w/2, cy: p.y + node.h/2 };
+}
+function absPos(node){
+  let x = node.x, y=node.y;
+  let cur = node;
+  let depth=0;
+  while(cur.parentId){
+    const parent = state.nodes.find(n=>n.id===cur.parentId);
+    if(!parent) break;
+    x += parent.x; y += parent.y;
+    cur = parent; depth++;
+    if(depth>10) break;
+  }
+  return {x,y};
+}
+function levelOf(node){
+  let d=1; let cur=node;
+  while(cur.parentId){ const p = state.nodes.find(n=>n.id===cur.parentId); if(!p) break; d++; cur=p; if(d>5) break; }
+  return Math.min(d,5);
 }
 
-/* ------------------ Seed ------------------ */
+/* ================== Rendering ================== */
+function render(){
+  world.innerHTML = "";
+  // order parents before children for proper stacking
+  const list = [...state.nodes].sort((a,b)=>{
+    const la = depth(a), lb = depth(b);
+    return la - lb || a.title.localeCompare(b.title);
+  });
+  for(const n of list){ renderBubble(n); }
+  renderEdges();
+  updateSide();
+}
+function depth(n){
+  let d=0, cur=n; while(cur.parentId){ cur=state.nodes.find(x=>x.id===cur.parentId); d++; if(d>9)break; } return d;
+}
+function renderBubble(node){
+  const el = document.createElement("div");
+  el.className = "bubble level-"+levelOf(node) + (node.id===selectedId? " selected":"");
+  el.style.left = node.x+"px"; el.style.top = node.y+"px";
+  el.style.width = node.w+"px"; el.style.height = node.h+"px";
+  el.dataset.id = node.id;
+
+  const title = document.createElement("div");
+  title.className = "title"; title.contentEditable = "true"; title.spellcheck = false;
+  title.innerText = node.title;
+  title.addEventListener("input", ()=>{ node.title = title.innerText.trim(); save(); if(node.id===selectedId) document.getElementById("sideTitle").innerText = node.title || "Untitled"; });
+
+  const close = document.createElement("div");
+  close.className = "x"; close.textContent = "✕";
+  close.onclick = (e)=>{ e.stopPropagation(); removeNode(node.id); };
+
+  const ring = document.createElement("div"); ring.className = "ring";
+  const handle = document.createElement("div"); handle.className = "connect-handle"; handle.title = "Start connection";
+  handle.addEventListener("mousedown",(e)=>{ e.stopPropagation(); startConnectionFrom(node.id); });
+
+  el.append(close, title, ring, handle);
+  world.appendChild(el);
+
+  enableDrag(el, node);
+  el.addEventListener("click",(e)=>{ select(node.id); });
+  el.addEventListener("dblclick",(e)=>{ /* title already editable; dblclick reserved */ });
+}
+
+function renderEdges(){
+  edges.innerHTML = "";
+  edges.setAttribute("width", world.clientWidth);
+  edges.setAttribute("height", world.clientHeight);
+  for(const e of state.edges){
+    const a = state.nodes.find(n=>n.id===e.a);
+    const b = state.nodes.find(n=>n.id===e.b);
+    if(!a || !b) continue;
+    const ac = centerOf(a), bc = centerOf(b);
+    const path = document.createElementNS("http://www.w3.org/2000/svg","line");
+    path.setAttribute("x1", ac.cx); path.setAttribute("y1", ac.cy);
+    path.setAttribute("x2", bc.cx); path.setAttribute("y2", bc.cy);
+    path.setAttribute("stroke", e.highlight? "#fff" : "url(#gline)");
+    path.setAttribute("stroke-width","2.5");
+    path.setAttribute("data-id", e.id);
+    path.addEventListener("click",()=>{ // toggle highlight → delete with Delete key
+      e.highlight = !e.highlight; save(); renderEdges();
+    });
+    edges.appendChild(path);
+  }
+  // gradient defs
+  const defs = document.createElementNS("http://www.w3.org/200/svg","defs");
+  edges.insertAdjacentHTML("afterbegin", `
+    <defs>
+      <linearGradient id="gline" x1="0" x2="1">
+        <stop offset="0%" stop-color="#9b6bff" />
+        <stop offset="100%" stop-color="#5330cc" />
+      </linearGradient>
+    </defs>
+  `);
+}
+
+/* ================== Dragging & Nesting ================== */
+let drag = null;
+function enableDrag(el, node){
+  el.addEventListener("mousedown",(e)=>{
+    if(e.target.classList.contains("x")) return;
+    drag = { id: node.id, dx: e.clientX - node.x, dy: e.clientY - node.y};
+    document.body.classList.add("dragging");
+  });
+}
+window.addEventListener("mousemove",(e)=>{
+  if(!drag) return;
+  const n = findNode(drag.id); if(!n) return;
+  n.x = e.clientX - drag.dx; n.y = e.clientY - drag.dy;
+  constrain(n);
+  save(); render(); // live update
+});
+window.addEventListener("mouseup",()=>{
+  if(!drag) return;
+  // check nesting on drop
+  const n = findNode(drag.id);
+  if(n){ const container = findContainerFor(n); if(container && container.id!==n.id && !isDescendant(container.id, n.id)){
+      n.parentId = container.id;
+      // rebase into parent's local coords
+      const ap = absPos(n); const pp = absPos(container);
+      n.x = ap.x - pp.x; n.y = ap.y - pp.y;
+    } else { n.parentId = null; }
+    save(); render();
+  }
+  drag=null; document.body.classList.remove("dragging");
+});
+
+function constrain(n){
+  const maxW = world.clientWidth, maxH = world.clientHeight;
+  const p = absPos(n);
+  // rough bounds (allow offscreen a bit)
+  if(p.x< -200) n.x += (-200 - p.x);
+  if(p.y< -200) n.y += (-200 - p.y);
+  if(p.x + n.w > maxW + 200) n.x -= (p.x + n.w - (maxW+200));
+  if(p.y + n.h > maxH + 200) n.y -= (p.y + n.h - (maxH+200));
+}
+function findContainerFor(child){
+  // choose the smallest bubble whose circle fully contains child's center
+  const c = centerOf(child);
+  let best=null; let bestArea=Infinity;
+  for(const n of state.nodes){
+    if(n.id===child.id) continue;
+    const r = Math.min(n.w,n.h)/2;
+    const nc = centerOf(n);
+    const dist = Math.hypot(c.cx - nc.cx, c.cy - nc.cy);
+    if(dist < r - 10){ // within
+      const area = n.w*n.h;
+      if(area<bestArea && !isDescendant(n.id, child.id)) { best=n; bestArea=area; }
+    }
+  }
+  return best;
+}
+function isDescendant(parentId, childId){
+  let cur = state.nodes.find(n=>n.id===childId);
+  while(cur && cur.parentId){ if(cur.parentId===parentId) return true; cur = state.nodes.find(n=>n.id===cur.parentId); }
+  return false;
+}
+
+/* ================== Selection & Side Panel ================== */
+function select(id){
+  selectedId = id;
+  render(); // to add .selected class
+}
+function updateSide(){
+  const titleEl = document.getElementById("sideTitle");
+  const n = state.nodes.find(x=>x.id===selectedId);
+  const enabled = !!n;
+  titleInput.disabled = notesInput.disabled = addLinkBtn.disabled = !enabled;
+  linksWrap.innerHTML = ""; tagsWrap.innerHTML = "";
+  if(!n){ titleEl.textContent = "No bubble selected"; titleInput.value=""; notesInput.value=""; return; }
+
+  titleEl.textContent = n.title || "Untitled";
+  titleInput.value = n.title || "";
+  notesInput.value = n.notes || "";
+  // links
+  for(const link of (n.links||[])){
+    linksWrap.appendChild(linkItem(n, link));
+  }
+  // tags
+  (n.tags||[]).forEach(t=>{
+    const span = document.createElement("span"); span.className="pill"; span.textContent=t; tagsWrap.appendChild(span);
+  });
+}
+function linkItem(node, link){
+  const row = document.createElement("div"); row.className="linkitem";
+  const type = document.createElement("select"); type.className="input"; type.style.maxWidth="120px";
+  ["Property","Food","Modular","Notion Task","LinkedIn","Step"].forEach(op=>{
+    const o = document.createElement("option"); o.value=op; o.textContent=op; if(link.type===op) o.selected=true; type.appendChild(o);
+  });
+  const label = document.createElement("input"); label.className="input"; label.placeholder="Label"; label.value = link.label||"";
+  const url = document.createElement("input"); url.className="input"; url.placeholder="https://…"; url.value = link.url||"";
+  const del = document.createElement("button"); del.className="btn danger"; del.textContent="✕";
+  del.onclick = ()=>{ node.links = (node.links||[]).filter(l=>l._id!==link._id); save(); updateSide(); };
+  [type,label,url].forEach(inp=>{
+    inp.addEventListener("input",()=>{
+      link.type = type.value; link.label = label.value; link.url = url.value; save();
+    });
+  });
+  row.append(type,label,url,del); return row;
+}
+titleInput.addEventListener("input",()=>{
+  const n = state.nodes.find(x=>x.id===selectedId); if(!n) return;
+  n.title = titleInput.value; save(); render();
+});
+notesInput.addEventListener("input",()=>{
+  const n = state.nodes.find(x=>x.id===selectedId); if(!n) return;
+  n.notes = notesInput.value; save();
+});
+document.getElementById("addLink").addEventListener("click",()=>{
+  const n = state.nodes.find(x=>x.id===selectedId); if(!n) return;
+  n.links = n.links || [];
+  n.links.push({_id:uid(), type:"Step", label:"New", url:""});
+  save(); updateSide();
+});
+
+/* ================== Nodes & Edges Ops ================== */
+function findNode(id){ return state.nodes.find(n=>n.id===id); }
+function addNode(props={}){
+  const n = Object.assign({
+    id: uid(), title:"New Bubble", x: 80 + Math.random()*200, y: 80 + Math.random()*200,
+    w: 180, h: 180, parentId:null, notes:"", tags:["Phuket"], links:[]
+  }, props);
+  state.nodes.push(n); save(); render(); select(n.id);
+}
+function removeNode(id){
+  if(selectedId===id) selectedId=null;
+  // remove children (promote to root)
+  for(const n of state.nodes){ if(n.parentId===id) n.parentId=null; }
+  // remove edges
+  state.edges = state.edges.filter(e=>e.a!==id && e.b!==id);
+  state.nodes = state.nodes.filter(n=>n.id!==id);
+  save(); render();
+}
+function addEdge(a,b){
+  if(a===b) return;
+  if(state.edges.some(e=> (e.a===a&&e.b===b) || (e.a===b&&e.b===a))) return;
+  state.edges.push({id:uid(), a,b}); save(); render();
+}
+function startConnectionFrom(id){
+  connectMode = true; pendingConnectFrom = id;
+  connectBtn.classList.add("active");
+}
+function endConnectionOn(id){
+  if(!connectMode || !pendingConnectFrom) return;
+  addEdge(pendingConnectFrom, id);
+  connectMode = false; pendingConnectFrom = null;
+  connectBtn.classList.remove("active");
+}
+
+/* click to finish connect */
+world.addEventListener("mousedown",(e)=>{
+  const el = e.target.closest(".bubble");
+  if(connectMode && el){ endConnectionOn(el.dataset.id); e.preventDefault(); }
+});
+
+/* keyboard: delete highlighted edge(s) or selected bubble */
+window.addEventListener("keydown",(e)=>{
+  if(e.key==="Delete" || e.key==="Backspace"){
+    const highlighted = state.edges.filter(e=>e.highlight);
+    if(highlighted.length){ state.edges = state.edges.filter(e=>!e.highlight); save(); render(); return; }
+    if(selectedId){ removeNode(selectedId); }
+  }
+});
+
+/* ================== Toolbar ================== */
+document.getElementById("addBubble").onclick = ()=> addNode();
+document.getElementById("connectMode").onclick = ()=>{ connectMode = !connectMode; pendingConnectFrom=null; connectBtn.classList.toggle("active", connectMode); };
+document.getElementById("exportBtn").onclick = ()=>{
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href=url; a.download="phuket-bubbles.json"; a.click(); URL.revokeObjectURL(url);
+};
+document.getElementById("resetBtn").onclick = ()=>{
+  if(confirm("Reset to initial Phuket seed?")){ state = seed(); save(); render(); }
+};
+document.getElementById("deleteSel").onclick = ()=>{ if(selectedId) removeNode(selectedId); };
+document.getElementById("importFile").addEventListener("change",(e)=>{
+  const f=e.target.files[0]; if(!f) return; const r=new FileReader();
+  r.onload=()=>{ try{
+      const data = JSON.parse(r.result);
+      if(!data || !Array.isArray(data.nodes) || !Array.isArray(data.edges)) throw new Error("Invalid JSON");
+      state = data; save(); render();
+    }catch(err){ alert("Import failed: " + err.message); } };
+  r.readAsText(f);
+});
+
+/* ================== Seed Data (Phuket) ================== */
 function seed(){
+  const id = (x)=> x; // readability
+  const A = uid(), B=uid(), C=uid(), D=uid(), E=uid(), F=uid();
+  const A1=uid(), A2=uid(), A3=uid(), A4=uid(), A5=uid();
+  const B1=uid(), B2=uid(), B3=uid();
+  const C1=uid(), C2=uid(), C3=uid();
+
   return {
-    lanes: [
-      { id: uid(), title:"1) Sourcing (Research)", blocks:[
-        {id:uid(), text:"Define categories: <b>Stays</b>, <b>Experiences</b>", tag:"Scope", owner:"You"},
-        {id:uid(), text:"Set quality bar: <b>≥ 4.4/5</b> or <b>≥ 8.8/10</b>", tag:"Rule", owner:"You"},
-        {id:uid(), text:"Pull candidates from Booking, TripAdvisor, GetYourGuide", tag:"Source", owner:"You"},
-        {id:uid(), text:"Create shortlist (10–20) for Phuket", tag:"Output", owner:"You"},
+    nodes: [
+      {id:A,title:"Acquire Top Phuket Inventory",x:80,y:90,w:260,h:260,notes:"Launch Edition focus ≥4.4 rating.",tags:["Phuket","≥4.4"],links:[]},
+      {id:B,title:"Stays (≥4.4)",x:410,y:80,w:220,h:220,parentId:A,links:[
+        {_id:uid(),type:"Property",label:"Keemala — Kamala",url:"https://www.hilton.com/en/hotels/hktkrlx-keemala/"},
+        {_id:uid(),type:"Property",label:"The Shore at Katathani — Kata Noi",url:"https://www.booking.com/hotel/th/the-shore-at-katathani.html"},
+        {_id:uid(),type:"Property",label:"The Slate — Nai Yang",url:"https://www.booking.com/hotel/th/the-slate.html"},
+        {_id:uid(),type:"Property",label:"The Nai Harn — Nai Harn",url:"https://www.booking.com/hotel/th/the-nai-harn.html"}
       ]},
-      { id: uid(), title:"2) Vetting (Signals & Ethics)", blocks:[
-        {id:uid(), text:"Check total reviews (prefer ≥100)", tag:"Signal", owner:"You"},
-        {id:uid(), text:"Scan recent negatives: safety, ethics, overcrowding", tag:"Risk", owner:"You"},
-        {id:uid(), text:"Confirm location & fit (Phuket-only)", tag:"Filter", owner:"You"},
+      {id:C,title:"Experiences (≥4.4)",x:70,y:370,w:240,h:240,parentId:A,links:[
+        {_id:uid(),type:"Step",label:"Curate 10–20 high-signal items",url:""},
+        {_id:uid(),type:"Food",label:"One Chun Cafe & Restaurant",url:"https://maps.google.com/?q=One+Chun+Cafe+%26+Restaurant+Phuket"},
+        {_id:uid(),type:"Food",label:"Suay Restaurant (Cherngtalay)",url:"https://maps.google.com/?q=Suay+Restaurant+Cherngtalay"},
+        {_id:uid(),type:"LinkedIn",label:"Guide partner (sample contact)",url:"https://www.linkedin.com/"}
       ]},
-      { id: uid(), title:"3) Acquisition (Outreach)", blocks:[
-        {id:uid(), text:"Contact GM/owner; explain Launch Edition", tag:"Comms", owner:"You"},
-        {id:uid(), text:"Request assets: short bio, 2–3 photos, booking link", tag:"Assets", owner:"Partner"},
-        {id:uid(), text:"Negotiate perks/commission if applicable", tag:"Deal", owner:"You"},
+      {id:D,title:"Outreach & Deals",x:720,y:110,w:240,h:240,parentId:A,links:[
+        {_id:uid(),type:"Notion Task",label:"Create outreach template",url:"https://www.notion.so"},
+        {_id:uid(),type:"Step",label:"Ask for 2–3 photos + 60-word bio",url:""},
+        {_id:uid(),type:"Step",label:"Negotiate perk or commission",url:""}
       ]},
-      { id: uid(), title:"4) Onboarding → Publish", blocks:[
-        {id:uid(), text:"Verify details (name, link, rating, blurb)", tag:"QA", owner:"You"},
-        {id:uid(), text:"Create listing card & schedule review", tag:"Build", owner:"You"},
-        {id:uid(), text:"Publish to Launch Edition", tag:"Ship", owner:"You"},
+      {id:E,title:"Modular Construction Partners",x:710,y:395,w:260,h:260,parentId:A,links:[
+        {_id:uid(),type:"Modular",label:"(Placeholder) Modular partner near Phuket",url:"https://www.google.com/search?q=modular+construction+phuket"},
+        {_id:uid(),type:"Step",label:"Define unit specs & lead times",url:""},
+        {_id:uid(),type:"LinkedIn",label:"Sample Project Manager",url:"https://www.linkedin.com/"}
       ]},
+      {id:F,title:"Hire a Bookkeeper",x:390,y:380,w:280,h:280,links:[
+        {_id:uid(),type:"Step",label:"Define hiring criteria",url:""},
+        {_id:uid(),type:"Step",label:"Define hours",url:""},
+        {_id:uid(),type:"Step",label:"Define salary",url:""},
+        {_id:uid(),type:"Step",label:"Define in-office requirement",url:""},
+        {_id:uid(),type:"Notion Task",label:"Assign bookkeeper task to Touchay",url:"https://www.notion.so"}
+      ]},
+
+      // Sub-bubbles (examples, 2–3 levels deep)
+      {id:A1,title:"Quality Rules",x:18,y:160,w:180,h:180,parentId:A,links:[
+        {_id:uid(),type:"Step",label:"Minimum 4.4/5 or 8.8/10",url:""}
+      ]},
+      {id:A2,title:"Data Sources",x:180,y:15,w:160,h:160,parentId:A,links:[
+        {_id:uid(),type:"Step",label:"Booking / TripAdvisor / GYG",url:""}
+      ]},
+      {id:B1,title:"Add 2–3 flagship villas",x:10,y:118,w:160,h:160,parentId:B,links:[
+        {_id:uid(),type:"Property",label:"COMO Point Yamu",url:"https://www.booking.com/reviews/th/hotel/point-yamu-by-como.html"}
+      ]},
+      {id:C1,title:"Elephant Jungle Sanctuary",x:14,y:116,w:180,h:180,parentId:C,links:[
+        {_id:uid(),type:"Property",label:"EJS (Half-Day)",url:"https://www.getyourguide.com/phuket-l32123/phuket-elephant-jungle-sanctuary-half-day-visit-t567839/"},
+        {_id:uid(),type:"Step",label:"Ethics check & capacity",url:""}
+      ]},
+      {id:C2,title:"Cooking Classes",x:60,y:10,w:160,h:160,parentId:C,links:[
+        {_id:uid(),type:"Property",label:"Wooddy Kitchen Class",url:"https://www.getyourguide.com/phuket-city-l187/wooddy-kitchen-thai-cooking-class-fresh-marketgargen-tour-t448151/"}
+      ]},
+      {id:C3,title:"Iconic Boat Trips",x:140,y:140,w:170,h:170,parentId:C,links:[
+        {_id:uid(),type:"Property",label:"James Bond Island Day Trip",url:"https://www.getyourguide.com/phuket-l32123/phuket-james-bond-island-day-trip-by-speedboat-and-canoe-t141483/"},
+        {_id:uid(),type:"Step",label:"Check weather & seasonality",url:""}
+      ]},
+      {id:A3,title:"QA & Publish",x:230,y:200,w:150,h:150,parentId:A,links:[
+        {_id:uid(),type:"Step",label:"Verify links, rating, blurb",url:""},
+        {_id:uid(),type:"Notion Task",label:"Publish to Launch Edition",url:"https://www.notion.so"}
+      ]},
+      {id:A4,title:"Ambassadors / Partners",x:220,y:330,w:160,h:160,parentId:A,links:[
+        {_id:uid(),type:"LinkedIn",label:"Local hostel contact (sample)",url:"https://www.linkedin.com/"}
+      ]},
+      {id:A5,title:"Tracking & Follow-up",x:40,y:320,w:160,h:160,parentId:A,links:[
+        {_id:uid(),type:"Notion Task",label:"Weekly review cadence",url:"https://www.notion.so"}
+      ]},
+      {id:B2,title:"Nai Harn cluster",x:88,y:70,w:140,h:140,parentId:B1,links:[]},
+      {id:B3,title:"Kamala/Kata cluster",x:20,y:12,w:130,h:130,parentId:B1,links:[]}
+    ],
+    edges: [
+      {id:uid(),a:A,b:B},{id:uid(),a:A,b:C},{id:uid(),a:A,b:D},{id:uid(),a:A,b:E},{id:uid(),a:A,b:F},
+      {id:uid(),a:C,b:C1},{id:uid(),a:C,b:C2},{id:uid(),a:C,b:C3},
+      {id:uid(),a:B,b:B1}
     ]
   };
 }
 
-/* ------------------ Toolbar ------------------ */
-document.getElementById("addLane").onclick = ()=> addLane("New Lane");
-document.getElementById("addBlock").onclick = ()=>{
-  if(!state.lanes.length) addLane("New Lane");
-  addBlock(state.lanes[0].id, {text:"New step…"});
-};
-document.getElementById("resetBtn").onclick = ()=>{
-  if(confirm("Reset to initial template? This clears current layout.")){
-    state = seed(); save(); render();
-  }
-};
-document.getElementById("exportBtn").onclick = ()=>{
-  const blob = new Blob([JSON.stringify(state,null,2)], {type:"application/json"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = "phuket-flow.json"; a.click();
-  URL.revokeObjectURL(url);
-};
-importFile.addEventListener("change", (e)=>{
-  const file = e.target.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ()=>{ try{
-      const data = JSON.parse(reader.result);
-      if(!data || !Array.isArray(data.lanes)) throw new Error("Invalid JSON");
-      state = data; save(); render();
-    }catch(err){ alert("Import failed: " + err.message); }
-  };
-  reader.readAsText(file);
-});
-
-/* ------------------ Init ------------------ */
+/* ================== Boot ================== */
 render();
+
+/* ================== UI bindings ================== */
+document.getElementById("addBubble").onclick = ()=> addNode();
+function findEdgeById(id){ return state.edges.find(e=>e.id===id); }
+function removeEdge(id){ state.edges = state.edges.filter(e=>e.id!==id); save(); render(); }
+
 </script>
 </body>
 </html>
