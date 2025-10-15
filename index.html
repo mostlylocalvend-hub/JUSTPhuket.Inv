@@ -3,320 +3,302 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>5–Day Board</title>
+<title>Two-Lane Timeline Board</title>
 <style>
   :root{
-    --last:#ff9800;    /* orange */
-    --today:#ffeb3b;   /* yellow */
-    --next:#00e5ff;    /* cyan */
-    --bg:#f6f7fb;
-    --card:#ffffff;
-    --text:#111827;
-    --muted:#6b7280;
-    --ring:#3b82f6;
-    --shadow:0 8px 20px rgba(0,0,0,.08);
-    --radius:16px;
+    /* Column banner colors */
+    --last:#ff9800;   /* orange */
+    --today:#ffeb3b;  /* yellow */
+    --next:#00e5ff;   /* cyan */
+
+    /* Lane accent colors (all different) */
+    --jm:#8bc34a;     /* green for Jersey Mike */
+    --bb:#e57373;     /* red for B'more Brach */
+    --td:#7c4dff;     /* purple for Today (single lane) */
+
+    --bg:#f6f7fb; --card:#ffffff; --text:#111827; --muted:#6b7280; --ring:#3b82f6;
+    --shadow:0 8px 20px rgba(0,0,0,.08); --radius:16px;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
-  body{
-    margin:0;background:var(--bg);color:var(--text);
-    font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
-  }
-  header{
-    padding:16px 22px; display:flex; justify-content:space-between; align-items:center;
-  }
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial,sans-serif}
+  header{padding:16px 22px;display:flex;justify-content:space-between;align-items:center}
   header h1{margin:0;font-size:20px;font-weight:700}
-  header .actions{display:flex; gap:10px;align-items:center}
   .hint{font-size:13px;color:var(--muted)}
-  .board{
-    display:grid; gap:18px; padding:18px; height:calc(100% - 70px);
-    grid-template-columns: repeat(3, 1fr);
-  }
-  .col{
-    display:flex; flex-direction:column; min-height:0; border-radius:var(--radius);
-    box-shadow: var(--shadow); overflow:hidden; background:var(--card);
-  }
-  .col-head{
-    position:relative; padding:14px 16px; font-weight:800; letter-spacing:.02em;
-    text-transform:uppercase; font-size:13px;
-  }
-  .col-head span{position:relative; z-index:2}
-  .col-head::before{
-    content:""; position:absolute; inset:0; opacity:.55;
-  }
-  .col[data-key="last"] .col-head::before{background:var(--last)}
-  .col[data-key="today"] .col-head::before{background:var(--today)}
-  .col[data-key="next"] .col-head::before{background:var(--next)}
-  .list{
-    padding:14px; gap:10px; display:flex; flex-direction:column; overflow:auto; min-height:140px;
-  }
-  .card{
-    background:#fff; border-radius:12px; padding:12px 12px 10px; box-shadow: var(--shadow);
-    border:1px solid #eef0f5; display:grid; grid-template-columns: 1fr auto; gap:8px; align-items:start;
-  }
+  .board{display:grid;gap:18px;padding:18px;height:calc(100% - 70px);grid-template-columns:repeat(3,1fr)}
+  .col{display:flex;flex-direction:column;min-height:0;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;background:var(--card)}
+  .col-head{position:relative;padding:14px 16px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;font-size:13px}
+  .col-head span{position:relative;z-index:2}
+  .col-head::before{content:"";position:absolute;inset:0;opacity:.55}
+  .col[data-col="last"] .col-head::before{background:var(--last)}
+  .col[data-col="today"] .col-head::before{background:var(--today)}
+  .col[data-col="next"] .col-head::before{background:var(--next)}
+
+  /* Lanes */
+  .lane{display:flex;flex-direction:column;border-top:1px dashed #e5e7eb}
+  .lane:first-of-type{border-top:0}
+  .lane-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;font-size:12px;font-weight:800;letter-spacing:.02em}
+  .lane-head .tag{padding:3px 8px;border-radius:999px;color:#fff;font-weight:700}
+  .lane[data-key="last_jm"] .tag, .lane[data-key="next_jm"] .tag{background:var(--jm)}
+  .lane[data-key="last_bb"] .tag, .lane[data-key="next_bb"] .tag{background:var(--bb)}
+  .lane[data-key="today"] .tag{background:var(--td)}
+  .lane .count{color:var(--muted)}
+  .list{padding:12px;gap:10px;display:flex;flex-direction:column;overflow:auto;min-height:120px}
+  .card{background:#fff;border-radius:12px;padding:12px 12px 10px;box-shadow:var(--shadow);border:1px solid #eef0f5;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start}
   .card[draggable="true"]{cursor:grab}
-  .card.dragging{opacity:.55; transform:scale(.98)}
+  .card.dragging{opacity:.55;transform:scale(.98)}
   .title{font-weight:600}
-  .meta{font-size:12px;color:var(--muted)}
-  .btns{display:flex; gap:6px}
-  button, .icon-btn{
-    border:1px solid #e5e7eb; background:#fff; padding:6px 10px; border-radius:10px;
-    font-size:12px; cursor:pointer
-  }
-  .icon-btn{padding:6px 8px; line-height:0}
-  .icon{width:16px;height:16px; display:inline-block}
-  .add{
-    display:flex; gap:8px; padding:12px 14px; border-top:1px dashed #e5e7eb; background:#fafbff;
-  }
-  .add input{
-    width:100%; padding:10px 12px; border-radius:10px; border:1px solid #e5e7eb; outline:none;
-  }
-  .add input:focus{border-color:var(--ring); box-shadow:0 0 0 3px rgba(59,130,246,.15)}
-  .drop-hint{
-    border:2px dashed #c7d2fe; border-radius:12px; padding:16px; text-align:center; color:#6366f1;
-    background:#eef2ff; display:none; margin:10px 0;
-  }
-  .col.drop-active .drop-hint{display:block}
-  .count{font-size:12px;color:var(--muted);margin-left:8px}
-  .toast{
-    position:fixed; left:50%; transform:translateX(-50%); bottom:18px; background:#111827; color:#fff;
-    padding:10px 14px; border-radius:12px; box-shadow:var(--shadow); font-size:13px; opacity:0; transition:.25s;
-  }
+  .btns{display:flex;gap:6px}
+  button,.icon-btn{border:1px solid #e5e7eb;background:#fff;padding:6px 10px;border-radius:10px;font-size:12px;cursor:pointer}
+  .icon-btn{padding:6px 8px;line-height:0}
+  .add{display:flex;gap:8px;padding:12px 14px;border-top:1px dashed #e5e7eb;background:#fafbff}
+  .add input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #e5e7eb;outline:none}
+  .add input:focus{border-color:var(--ring);box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+  .drop-hint{border:2px dashed #c7d2fe;border-radius:12px;padding:12px;text-align:center;color:#6366f1;background:#eef2ff;display:none;margin:10px 12px}
+  .lane.drop-active .drop-hint{display:block}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#111827;color:#fff;padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);font-size:13px;opacity:0;transition:.25s}
   .toast.show{opacity:1}
-  @media (max-width:900px){
-    .board{grid-template-columns:1fr}
-  }
+  @media (max-width:900px){.board{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-  <header>
-    <h1>Timeline Board <span class="hint">Drag to move • Click ✎ to edit • Min 5 per column</span></h1>
-    <div class="actions">
-      <button id="reset">Reset demo data</button>
+<header>
+  <h1>Timeline Board <span class="hint">Drag to move • ✎ to edit • Min 5 per lane</span></h1>
+  <div class="actions">
+    <button id="reset">Reset demo data</button>
+  </div>
+</header>
+
+<main class="board" id="board">
+  <!-- LAST 5 DAYS -->
+  <section class="col" data-col="last" aria-label="Last 5 Days">
+    <div class="col-head"><span>LAST 5 DAYS</span></div>
+
+    <div class="lane" data-key="last_jm">
+      <div class="lane-head">
+        <span class="tag">Jersey Mike</span>
+        <span class="count"></span>
+      </div>
+      <div class="list" role="list"></div>
+      <div class="drop-hint">Drop here</div>
+      <div class="add">
+        <input type="text" placeholder="Add for Jersey Mike (Last 5 Days)…" />
+        <button class="add-btn">Add</button>
+      </div>
     </div>
-  </header>
 
-  <main class="board" id="board">
-    <!-- Columns -->
-    <section class="col" data-key="last" aria-label="Last 5 Days">
-      <div class="col-head"><span>LAST 5 DAYS <span class="count"></span></span></div>
+    <div class="lane" data-key="last_bb">
+      <div class="lane-head">
+        <span class="tag">B’more Brach</span>
+        <span class="count"></span>
+      </div>
       <div class="list" role="list"></div>
       <div class="drop-hint">Drop here</div>
       <div class="add">
-        <input type="text" placeholder="Add an item to Last 5 Days…" />
+        <input type="text" placeholder="Add for B’more Brach (Last 5 Days)…" />
         <button class="add-btn">Add</button>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section class="col" data-key="today" aria-label="Today">
-      <div class="col-head"><span>TODAY <span class="count"></span></span></div>
+  <!-- TODAY (single lane, own color) -->
+  <section class="col" data-col="today" aria-label="Today">
+    <div class="col-head"><span>TODAY</span></div>
+
+    <div class="lane" data-key="today">
+      <div class="lane-head">
+        <span class="tag">Today</span>
+        <span class="count"></span>
+      </div>
       <div class="list" role="list"></div>
       <div class="drop-hint">Drop here</div>
       <div class="add">
-        <input type="text" placeholder="Add an item to Today…" />
+        <input type="text" placeholder="Add an item for Today…" />
         <button class="add-btn">Add</button>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section class="col" data-key="next" aria-label="Next 5 Days">
-      <div class="col-head"><span>NEXT 5 DAYS <span class="count"></span></span></div>
+  <!-- NEXT 5 DAYS -->
+  <section class="col" data-col="next" aria-label="Next 5 Days">
+    <div class="col-head"><span>NEXT 5 DAYS</span></div>
+
+    <div class="lane" data-key="next_jm">
+      <div class="lane-head">
+        <span class="tag">Jersey Mike</span>
+        <span class="count"></span>
+      </div>
       <div class="list" role="list"></div>
       <div class="drop-hint">Drop here</div>
       <div class="add">
-        <input type="text" placeholder="Add an item to Next 5 Days…" />
+        <input type="text" placeholder="Add for Jersey Mike (Next 5 Days)…" />
         <button class="add-btn">Add</button>
       </div>
-    </section>
-  </main>
+    </div>
 
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="lane" data-key="next_bb">
+      <div class="lane-head">
+        <span class="tag">B’more Brach</span>
+        <span class="count"></span>
+      </div>
+      <div class="list" role="list"></div>
+      <div class="drop-hint">Drop here</div>
+      <div class="add">
+        <input type="text" placeholder="Add for B’more Brach (Next 5 Days)…" />
+        <button class="add-btn">Add</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 (function(){
-  const MIN_PER_COL = 5;
-  const STORAGE_KEY = "fiveDayBoard.v1";
+  const MIN_PER_LANE = 5;
+  const STORAGE_KEY = "twoLaneBoard.v1";
 
-  const $ = sel => document.querySelector(sel);
-  const $$ = sel => Array.from(document.querySelectorAll(sel));
-  const toast = (msg)=> {
-    const el = $('#toast');
-    el.textContent = msg; el.classList.add('show');
-    setTimeout(()=>el.classList.remove('show'),1600);
-  };
+  const lanes = ["last_jm","last_bb","today","next_jm","next_bb"];
+
+  const $ = s=>document.querySelector(s);
+  const $$ = s=>Array.from(document.querySelectorAll(s));
+  const toast = (m)=>{ const t=$('#toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1600); };
 
   const demoData = () => ({
-    last: Array.from({length:5}, (_,i)=>({id:crypto.randomUUID(), t:`Wrapped task L${i+1}`})),
-    today: Array.from({length:5}, (_,i)=>({id:crypto.randomUUID(), t:`Do today T${i+1}`})),
-    next: Array.from({length:5}, (_,i)=>({id:crypto.randomUUID(), t:`Plan next N${i+1}`}))
+    last_jm: Array.from({length:5},(_,i)=>({id:crypto.randomUUID(),t:`JM Last ${i+1}`})),
+    last_bb: Array.from({length:5},(_,i)=>({id:crypto.randomUUID(),t:`BB Last ${i+1}`})),
+    today:   Array.from({length:5},(_,i)=>({id:crypto.randomUUID(),t:`Today ${i+1}`})),
+    next_jm: Array.from({length:5},(_,i)=>({id:crypto.randomUUID(),t:`JM Next ${i+1}`})),
+    next_bb: Array.from({length:5},(_,i)=>({id:crypto.randomUUID(),t:`BB Next ${i+1}`}))
   });
 
   let state = load() || demoData();
   renderAll();
 
   // Reset
-  $('#reset').addEventListener('click', ()=>{
-    state = demoData(); save(); renderAll(); toast("Demo data restored");
-  });
+  $('#reset').addEventListener('click', ()=>{ state = demoData(); save(); renderAll(); toast("Demo data restored"); });
 
-  // Add handlers
-  $$('.col').forEach(col=>{
-    const key = col.dataset.key;
-    const input = col.querySelector('.add input');
-    const btn = col.querySelector('.add .add-btn');
-    const add = () => {
-      const txt = (input.value||"").trim();
-      if(!txt) return;
-      state[key].push({id:crypto.randomUUID(), t:txt});
-      input.value = "";
-      save(); renderColumn(key);
+  // Add handlers per lane
+  $$('.lane').forEach(l=>{
+    const key = l.dataset.key;
+    const input = l.querySelector('.add input');
+    const btn = l.querySelector('.add .add-btn');
+    const add = ()=>{
+      const txt=(input.value||"").trim(); if(!txt) return;
+      state[key].push({id:crypto.randomUUID(),t:txt});
+      input.value=""; save(); renderLane(key);
     };
     btn.addEventListener('click', add);
     input.addEventListener('keydown', e=>{ if(e.key==='Enter') add(); });
   });
 
-  // Drag-n-drop
-  let drag = { id:null, fromKey:null, placeholder:null };
+  // Drag & drop across any lane
+  let drag = {id:null, fromKey:null};
 
   function onDragStart(e){
-    const card = e.currentTarget;
-    drag.id = card.dataset.id;
-    drag.fromKey = card.closest('.col').dataset.key;
+    const card=e.currentTarget;
+    drag.id=card.dataset.id;
+    drag.fromKey=card.closest('.lane').dataset.key;
     card.classList.add('dragging');
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData('text/plain', drag.id);
-    $$('.col').forEach(c=>c.classList.add('drop-active'));
+    $$('.lane').forEach(l=>l.classList.add('drop-active'));
+    e.dataTransfer.effectAllowed="move";
+    e.dataTransfer.setData('text/plain',drag.id);
   }
-
   function onDragEnd(e){
     e.currentTarget.classList.remove('dragging');
-    $$('.col').forEach(c=>c.classList.remove('drop-active'));
+    $$('.lane').forEach(l=>l.classList.remove('drop-active'));
   }
 
   $$('.list').forEach(list=>{
     list.addEventListener('dragover', e=>{
       e.preventDefault();
-      const dragging = $('.card.dragging');
-      const after = getDragAfterElement(list, e.clientY);
-      if(after == null){
-        list.appendChild(dragging);
-      } else {
-        list.insertBefore(dragging, after);
-      }
+      const dragging=$('.card.dragging');
+      const after=getDragAfterElement(list, e.clientY);
+      if(!dragging) return;
+      if(after==null) list.appendChild(dragging);
+      else list.insertBefore(dragging, after);
     });
 
     list.addEventListener('drop', e=>{
       e.preventDefault();
-      const toKey = list.closest('.col').dataset.key;
+      const toKey=list.closest('.lane').dataset.key;
       if(!drag.id) return;
 
-      // If moving within same column, just reorder state to match DOM
-      const same = toKey === drag.fromKey;
+      const same = toKey===drag.fromKey;
 
-      if(!same){
-        // enforce minimum before moving out
-        if(state[drag.fromKey].length <= MIN_PER_COL){
-          renderAll();
-          toast(`Keep at least ${MIN_PER_COL} items in each column`);
-          drag.id=null; return;
-        }
+      if(!same && state[drag.fromKey].length<=MIN_PER_LANE){
+        renderAll(); toast(`Keep at least ${MIN_PER_LANE} items in every lane`);
+        drag.id=null; return;
       }
 
-      // Compute new order based on DOM
       const ids = Array.from(list.querySelectorAll('.card')).map(c=>c.dataset.id);
 
-      // Remove from source
       if(!same){
         const idx = state[drag.fromKey].findIndex(x=>x.id===drag.id);
         const [item] = state[drag.fromKey].splice(idx,1);
-        // Insert into destination at position derived from ids
-        const destIds = ids;
-        const insertIndex = destIds.indexOf(drag.id);
-        state[toKey].splice(insertIndex, 0, item);
-      } else {
-        // Reorder within same
+        const insertIndex = ids.indexOf(drag.id);
+        state[toKey].splice(insertIndex,0,item);
+      }else{
         state[toKey].sort((a,b)=> ids.indexOf(a.id) - ids.indexOf(b.id));
       }
 
-      save(); renderAll();
-      drag.id=null;
+      save(); renderAll(); drag.id=null;
     });
   });
 
   function getDragAfterElement(container, y){
-    const els = [...container.querySelectorAll('.card:not(.dragging)')];
-    return els.reduce((closest, child) => {
-      const box = child.getBoundingClientRect();
-      const offset = y - box.top - box.height/2;
-      if(offset < 0 && offset > closest.offset) return {offset,element:child};
-      else return closest;
-    }, {offset:Number.NEGATIVE_INFINITY}).element;
+    const els=[...container.querySelectorAll('.card:not(.dragging)')];
+    return els.reduce((closest,child)=>{
+      const box=child.getBoundingClientRect();
+      const offset=y - box.top - box.height/2;
+      if(offset<0 && offset>closest.offset) return {offset,element:child};
+      return closest;
+    },{offset:Number.NEGATIVE_INFINITY}).element;
   }
 
-  // CRUD helpers
-  function addCardEl(item, key){
-    const card = document.createElement('article');
-    card.className="card"; card.draggable=true; card.dataset.id=item.id;
+  // Card UI + CRUD
+  function cardEl(item, key){
+    const el=document.createElement('article');
+    el.className='card'; el.dataset.id=item.id; el.draggable=true;
 
-    const text = document.createElement('div');
-    text.className="title"; text.textContent = item.t;
+    const title=document.createElement('div'); title.className='title'; title.textContent=item.t;
+    const btns=document.createElement('div'); btns.className='btns';
 
-    const btns = document.createElement('div');
-    btns.className="btns";
-
-    const edit = iconBtn('✎','Edit');
-    edit.addEventListener('click', ()=>{
-      const next = prompt("Edit item:", item.t);
+    const edit=btn('✎','Edit',()=> {
+      const next=prompt("Edit item:", item.t);
       if(next===null) return;
-      const v = next.trim();
-      if(!v){ toast("Empty title not allowed"); return; }
-      item.t = v; save(); renderColumn(key);
+      const v=next.trim(); if(!v){ toast("Empty title not allowed"); return; }
+      item.t=v; save(); renderLane(key);
+    });
+    const del=btn('✕','Delete',()=> {
+      if(state[key].length<=MIN_PER_LANE){ toast(`Must keep at least ${MIN_PER_LANE} here`); return; }
+      state[key]=state[key].filter(x=>x.id!==item.id); save(); renderLane(key);
     });
 
-    const del = iconBtn('✕','Delete');
-    del.addEventListener('click', ()=>{
-      if(state[key].length <= MIN_PER_COL){
-        toast(`Must keep at least ${MIN_PER_COL} here`);
-        return;
-      }
-      state[key] = state[key].filter(x=>x.id!==item.id);
-      save(); renderColumn(key);
-    });
-
-    btns.append(edit, del);
-    card.append(text, btns);
-
-    card.addEventListener('dragstart', onDragStart);
-    card.addEventListener('dragend', onDragEnd);
-    return card;
+    btns.append(edit,del); el.append(title,btns);
+    el.addEventListener('dragstart', onDragStart);
+    el.addEventListener('dragend', onDragEnd);
+    return el;
   }
+  function btn(txt,label,fn){ const b=document.createElement('button'); b.className='icon-btn'; b.textContent=txt; b.title=label; b.setAttribute('aria-label',label); b.addEventListener('click',fn); return b; }
 
-  function iconBtn(char, label){
-    const b = document.createElement('button');
-    b.className='icon-btn'; b.title=label; b.setAttribute('aria-label',label);
-    b.textContent = char;
-    return b;
+  function renderLane(key){
+    const lane = document.querySelector(`.lane[data-key="${key}"]`);
+    const list = lane.querySelector('.list');
+    list.innerHTML="";
+    state[key].forEach(it=> list.appendChild(cardEl(it,key)));
+    lane.querySelector('.count').textContent=`(${state[key].length})`;
   }
-
-  function renderColumn(key){
-    const col = document.querySelector(`.col[data-key="${key}"]`);
-    const list = col.querySelector('.list');
-    list.innerHTML = "";
-    state[key].forEach(item=> list.appendChild(addCardEl(item, key)));
-    col.querySelector('.count').textContent = `(${state[key].length})`;
-  }
-  function renderAll(){ ['last','today','next'].forEach(renderColumn); }
+  function renderAll(){ lanes.forEach(renderLane); }
   function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
   function load(){
     try{
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if(!raw) return null;
-      const obj = JSON.parse(raw);
-      // Ensure arrays exist and min 5 by padding
-      ['last','today','next'].forEach(k=>{
-        obj[k] = Array.isArray(obj[k]) ? obj[k] : [];
-        while(obj[k].length < MIN_PER_COL){
-          obj[k].push({id:crypto.randomUUID(), t:`New item ${k} ${obj[k].length+1}`});
+      const raw=localStorage.getItem(STORAGE_KEY); if(!raw) return null;
+      const obj=JSON.parse(raw);
+      lanes.forEach(k=>{
+        obj[k]=Array.isArray(obj[k])?obj[k]:[];
+        while(obj[k].length<MIN_PER_LANE){
+          obj[k].push({id:crypto.randomUUID(), t:`New ${k.replace('_',' ').toUpperCase()} ${obj[k].length+1}`});
         }
       });
       return obj;
