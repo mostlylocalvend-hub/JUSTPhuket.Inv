@@ -4,16 +4,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>JUST Phuket Planner</title>
-    <!-- TailwindCSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React 18 UMD -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <!-- Icons (optional, used for + and X) -->
-    <script crossorigin src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <style>
-      /* simple absolute layout utility (no external libs) */
-      .task-card { position:absolute; top:0; }
+      .task { position:absolute; top:8px; }
+      .btn { border:1px solid rgb(203,213,225); padding:0 6px; border-radius:8px; font-size:12px; line-height:20px; }
     </style>
   </head>
   <body class="bg-slate-50">
@@ -22,12 +18,10 @@
     <script>
       const React = window.React;
       const ReactDOM = window.ReactDOM;
-      const lucide = window.lucide;
 
-      // ---- data helpers ----
+      // ------- data -------
       const clamp = (n,min,max)=>Math.max(min,Math.min(max,n));
       const rid = ()=>Math.random().toString(36).slice(2,9);
-
       const WEEKS = [
         { id:"w1", label:"Oct 13" },
         { id:"w2", label:"Oct 20" },
@@ -35,52 +29,49 @@
         { id:"w4", label:"Nov 3"  },
         { id:"w5", label:"Nov 10" }
       ];
-
       const LANES = [
-        { id:"just",    name:"JUST (MVP / App Stack)" },
+        { id:"just", name:"JUST (MVP / App Stack)" },
         { id:"safeway", name:"Safeway (Build + Design)" },
-        { id:"solstice",name:"Solstice (30D Plan)" },
-        { id:"budget",  name:"Budget / Calendar / Team" }
+        { id:"solstice", name:"Solstice (30D Plan)" },
+        { id:"budget", name:"Budget / Calendar / Team" }
       ];
-
       function sampleLinks(){
         return [
           { type:"Property", label:"Kata Beach Land Plot", url:"https://maps.app.goo.gl/" },
-          { type:"Food",     label:"Old Town cafés",       url:"https://maps.app.goo.gl/" },
-          { type:"Modular",  label:"Safeway Prefab",       url:"https://example.com" },
-          { type:"Notion",   label:"Faux Task Board",      url:"https://notion.so" },
-          { type:"LinkedIn", label:"Apichai (Procurement)",url:"https://linkedin.com" }
+          { type:"Food", label:"Old Town cafés", url:"https://maps.app.goo.gl/" },
+          { type:"Modular", label:"Safeway Prefab", url:"https://example.com" },
+          { type:"Notion", label:"Faux Task Board", url:"https://notion.so" },
+          { type:"LinkedIn", label:"Apichai (Procurement)", url:"https://linkedin.com" }
         ];
       }
-
       const DEFAULT_TASKS = [
-        { id:rid(), laneId:"just",    title:"MVP: Verified Hostel Tips",     startCol:0, endCol:2, links:sampleLinks() },
-        { id:rid(), laneId:"safeway", title:"Buy modules + vendor shortlist",startCol:1, endCol:4, links:sampleLinks() },
-        { id:rid(), laneId:"solstice",title:"30-day soft launch plan",       startCol:0, endCol:3, links:sampleLinks() },
-        { id:rid(), laneId:"budget",  title:"Team calendar + hiring",        startCol:2, endCol:4, links:sampleLinks() }
+        { id:rid(), laneId:"just", title:"MVP: Verified Hostel Tips", startCol:0, endCol:2, links:sampleLinks() },
+        { id:rid(), laneId:"safeway", title:"Buy modules + vendor shortlist", startCol:1, endCol:4, links:sampleLinks() },
+        { id:rid(), laneId:"solstice", title:"30-day soft launch plan", startCol:0, endCol:3, links:sampleLinks() },
+        { id:rid(), laneId:"budget", title:"Team calendar + hiring", startCol:2, endCol:4, links:sampleLinks() }
       ];
 
-      // ---- app ----
+      // ------- app -------
       function App(){
         const gridRef = React.useRef(null);
         const [tasks,setTasks] = React.useState(DEFAULT_TASKS);
         const [selected,setSelected] = React.useState(null);
 
-        const colWidth = ()=> gridRef.current ? gridRef.current.clientWidth/ WEEKS.length : 200;
+        const colWidth = ()=> gridRef.current ? gridRef.current.clientWidth / WEEKS.length : 200;
 
         function addTask(laneId){
-          setTasks(p=>[...p,{ id:rid(), laneId, title:"New Task", startCol:0, endCol:0, links:sampleLinks() }]);
+          setTasks(p=>[...p,{ id:rid(), laneId, title:"New Task", startCol:0, endCol:0, links:[] }]);
         }
-        function deleteTask(id){
+        function delTask(id){
           setTasks(p=>p.filter(t=>t.id!==id));
           if(selected && selected.id===id) setSelected(null);
         }
-        function moveTask(id,dir){ // simple left/right shift by 1 column
+        function moveTask(id,dir){ // shift by 1 week
           setTasks(p=>p.map(t=>{
             if(t.id!==id) return t;
-            const len = t.endCol - t.startCol;
+            const span = t.endCol - t.startCol;
             const ns = clamp(t.startCol + dir, 0, WEEKS.length-1);
-            const ne = clamp(ns + len, 0, WEEKS.length-1);
+            const ne = clamp(ns + span, 0, WEEKS.length-1);
             return {...t, startCol:ns, endCol:ne};
           }));
         }
@@ -97,27 +88,21 @@
           }));
         }
 
-        function Task({task, rowIndex}){
+        function Task({task}){
           const w = colWidth();
           const left = task.startCol*w + 8*task.startCol + 4;
           const width= Math.max(w*(task.endCol-task.startCol+1) + 8*(task.endCol-task.startCol), w-6);
-          const top = 8; // inside the row block
           return React.createElement(
             "div",
-            {
-              className:"task-card -mt-16 flex items-center gap-2 rounded-2xl border bg-indigo-50/80 px-3 py-2 shadow-sm hover:bg-indigo-100",
-              style:{ left, width, top },
-              onClick:()=>setSelected(task)
-            },
-            React.createElement("div",{className:"flex-1 text-sm font-medium"}, task.title),
-            React.createElement("div",{className:"flex items-center gap-1"},
-              React.createElement("button",{className:"rounded border px-1 text-xs", onClick:(e)=>{e.stopPropagation();moveTask(task.id,-1);}}, "◀"),
-              React.createElement("button",{className:"rounded border px-1 text-xs", onClick:(e)=>{e.stopPropagation();moveTask(task.id, 1);}}, "▶"),
-              React.createElement("button",{className:"rounded border px-1 text-xs", onClick:(e)=>{e.stopPropagation();resizeTask(task.id,'left',-1);}}, "«"),
-              React.createElement("button",{className:"rounded border px-1 text-xs", onClick:(e)=>{e.stopPropagation();resizeTask(task.id,'right',1);}}, "»"),
-              React.createElement("button",{className:"rounded-xl p-1 text-slate-500 hover:bg-white", onClick:(e)=>{e.stopPropagation();deleteTask(task.id);}, title:"Delete"},
-                React.createElement(lucide.X,{className:"w-4 h-4"})
-              )
+            { className:"task rounded-2xl border bg-indigo-50/80 px-3 py-2 shadow-sm hover:bg-indigo-100 cursor-pointer",
+              style:{left, width}, onClick:()=>setSelected(task) },
+            React.createElement("div",{className:"flex items-center gap-2"},
+              React.createElement("div",{className:"flex-1 text-sm font-medium truncate"}, task.title),
+              React.createElement("button",{className:"btn", onClick:(e)=>{e.stopPropagation();moveTask(task.id,-1);}}, "◀"),
+              React.createElement("button",{className:"btn", onClick:(e)=>{e.stopPropagation();moveTask(task.id, 1);}}, "▶"),
+              React.createElement("button",{className:"btn", onClick:(e)=>{e.stopPropagation();resizeTask(task.id,'left',-1);}}, "«"),
+              React.createElement("button",{className:"btn", onClick:(e)=>{e.stopPropagation();resizeTask(task.id,'right',1);}}, "»"),
+              React.createElement("button",{className:"btn", onClick:(e)=>{e.stopPropagation();delTask(task.id);}}, "X")
             )
           );
         }
@@ -131,7 +116,7 @@
               React.createElement("span",{className:"inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-indigo-600 text-white font-bold"},"J"),
               React.createElement("div",null,
                 React.createElement("div",{className:"text-xl font-semibold"},"JUST Phuket Planner"),
-                React.createElement("div",{className:"text-xs text-slate-500"},"Interactive timeline (no build step)")
+                React.createElement("div",{className:"text-xs text-slate-500"},"Interactive timeline (no build tools)")
               )
             )
           ),
@@ -142,15 +127,14 @@
             ),
             // grid
             React.createElement("div",{ref:gridRef,className:"relative mt-2 rounded-2xl border bg-white p-2 shadow-sm"},
-              LANES.map((lane,ri)=>React.createElement("div",{key:lane.id},
+              LANES.map((lane)=>React.createElement("div",{key:lane.id},
                 React.createElement("div",{className:"flex items-center justify-between px-2 py-2"},
                   React.createElement("div",{className:"text-sm font-semibold"}, lane.name),
-                  React.createElement("button",{className:"inline-flex items-center gap-1 rounded-xl border px-2 py-1 text-xs hover:bg-slate-100", onClick:()=>addTask(lane.id)},
-                    React.createElement(lucide.Plus,{className:"w-3 h-3"}),"Add Task")
+                  React.createElement("button",{className:"btn hover:bg-slate-100", onClick:()=>addTask(lane.id)},"+ Add Task")
                 ),
                 React.createElement("div",{className:"grid grid-cols-5 gap-2 border-b pb-12 pt-2 relative"},
                   [0,1,2,3,4].map(i=>React.createElement("div",{key:i,className:"h-20 rounded-xl bg-slate-50"})),
-                  tasks.filter(t=>t.laneId===lane.id).map(t=>React.createElement(Task,{key:t.id, task:t, rowIndex:ri}))
+                  tasks.filter(t=>t.laneId===lane.id).map(t=>React.createElement(Task,{key:t.id, task:t}))
                 )
               ))
             )
@@ -159,18 +143,20 @@
           selected && React.createElement("div",{className:"fixed inset-0 z-50 bg-black/40 flex items-center justify-center"},
             React.createElement("div",{className:"bg-white w-[420px] max-h-[90vh] overflow-y-auto rounded-2xl p-4 shadow-xl"},
               React.createElement("div",{className:"flex justify-between items-center mb-2"},
-                React.createElement("h2",{className:"font-semibold text-sm"},selected.title),
-                React.createElement("button",{className:"rounded-xl border p-1 hover:bg-slate-100", onClick:()=>setSelected(null)},
-                  React.createElement(lucide.X,{className:"w-4 h-4"}))
+                React.createElement("h2",{className:"font-semibold text-sm"}, selected.title),
+                React.createElement("button",{className:"btn", onClick:()=>setSelected(null)},"Close")
               ),
               React.createElement("div",{className:"space-y-2"},
-                selected.links.map((l,i)=>React.createElement("a",{key:i,href:l.url,target:"_blank",className:"block rounded-xl border p-2 text-xs hover:bg-slate-50"},
-                  React.createElement("b",null,l.type+": "), l.label))
+                selected.links.map((l,i)=>React.createElement(
+                  "a",
+                  { key:i, href:l.url, target:"_blank", className:"block rounded-xl border p-2 text-xs hover:bg-slate-50" },
+                  React.createElement("b",null,l.type+": "), l.label
+                ))
               )
             )
           ),
           React.createElement("div",{className:"mx-auto max-w-7xl px-4 py-6 text-center text-xs text-slate-500"},
-            "Tip: Click a task for links. Use ◀ ▶ to move weeks and « » to resize span."
+            "Click a task for links. Use ◀ ▶ to move, « » to resize, + to add, X to delete."
           )
         );
       }
